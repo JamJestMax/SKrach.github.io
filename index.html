@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SKrach — Wizualny Edytor Skript Minecraft</title>
+<style>
+  :root {
+    --bg-main: #f9f9f9;
+    --bg-panel: #ffffff;
+    --bg-workspace: #f0f4f8;
+    --bg-code: #161922;
+    --border: #d9e2ec;
+    --accent: #4c97ff;
+    --accent-dark: #3373cc;
+    --green: #0fbd8c;
+    --purple: #9966ff;
+    --text: #2c3e50;
+    --text-muted: #627d98;
+  }
+  * { box-sizing: border-box; user-select: none; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+  body { margin: 0; height: 100vh; display: flex; flex-direction: column; background: var(--bg-main); color: var(--text); overflow: hidden; }
+
+  /* TOP NAVBAR */
+  header {
+    height: 54px; background: var(--accent); color: #fff;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.14); z-index: 20; gap: 10px;
+  }
+  .brand { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 20px; letter-spacing: -0.5px; white-space: nowrap; }
+  .brand-badge { background: #ffab19; color: #1e1e1e; font-size: 11px; padding: 2px 7px; border-radius: 99px; font-weight: 800; }
+  .top-controls { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+  .title-input {
+    background: rgba(255,255,255,0.22); border: 1px solid rgba(255,255,255,0.45);
+    color: #fff; padding: 6px 11px; border-radius: 6px; font-weight: 600; font-size: 13px; width: 185px;
+    user-select: text;
+  }
+  .title-input::placeholder { color: rgba(255,255,255,0.82); }
+  .title-input:focus { outline: none; background: rgba(255,255,255,0.32); border-color: #fff; }
+
+  .btn {
+    border: none; border-radius: 6px; padding: 7px 12px; font-size: 12.5px; font-weight: 700;
+    cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: 0.14s; white-space: nowrap;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-white { background: #fff; color: var(--accent-dark); }
+  .btn-white:hover { background: #eef6ff; }
+  .btn-green { background: var(--green); color: #fff; }
+  .btn-green:hover { filter: brightness(1.06); }
+  .btn-orange { background: #ffab19; color: #1f2933; }
+  .btn-orange:hover { filter: brightness(1.05); }
+  .btn-purple { background: #9966ff; color: #fff; }
+  .btn-purple:hover { filter: brightness(1.07); }
+  .btn-ghost { background: rgba(255,255,255,0.18); color: #fff; }
+  .btn-ghost:hover { background: rgba(255,255,255,0.28); }
+
+  /* MAIN LAYOUT */
+  main { flex: 1; display: flex; overflow: hidden; }
+
+  /* CATEGORIES SIDEBAR */
+  .categories {
+    width: 78px; background: var(--bg-panel); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; align-items: center; padding-top: 10px; gap: 6px;
+  }
+  .cat-item {
+    width: 66px; padding: 8px 4px; border-radius: 8px; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    font-size: 11px; font-weight: 700; color: var(--text-muted); text-align: center;
+  }
+  .cat-item:hover, .cat-item.active { background: #eef4fa; color: var(--accent-dark); }
+  .cat-dot { width: 20px; height: 20px; border-radius: 50%; border: 2px solid rgba(0,0,0,0.12); }
+
+  /* BLOCK PALETTE */
+  .palette {
+    width: 280px; background: var(--bg-panel); border-right: 1px solid var(--border);
+    padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 9px;
+  }
+  .palette-title { font-size: 11.5px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); margin-bottom: 2px; }
+
+  /* WORKSPACE */
+  .workspace-wrap { flex: 1; position: relative; background: var(--bg-workspace); overflow: hidden; display: flex; flex-direction: column; }
+  .workspace-bar {
+    height: 36px; background: #e4ecf4; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between; padding: 0 12px; font-size: 12px; color: var(--text-muted);
+  }
+  #workspace {
+    flex: 1; position: relative; overflow: auto; padding: 20px;
+    background-image: radial-gradient(#cbd5e1 1.2px, transparent 1.2px);
+    background-size: 20px 20px;
+  }
+
+  /* SCRATCH-STYLE BLOCKS */
+  .block {
+    display: inline-flex; flex-direction: column; align-items: flex-start;
+    color: #fff; font-weight: 600; font-size: 12.5px; border-radius: 6px;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.22); cursor: pointer; position: relative;
+    margin-bottom: 4px; max-width: 100%; transition: transform 0.08s;
+  }
+  .palette .block:hover { transform: translateX(3px); }
+  .block-row {
+    display: flex; align-items: center; flex-wrap: wrap; gap: 5px;
+    padding: 6px 10px; min-height: 33px;
+  }
+  .block.hat { border-radius: 16px 16px 6px 6px; padding-top: 3px; }
+  .c-inner {
+    margin-left: 16px; padding: 6px 8px; min-height: 34px; min-width: 210px;
+    background: rgba(0,0,0,0.14); border-left: 3px solid rgba(255,255,255,0.4);
+    border-radius: 4px 0 0 4px; display: flex; flex-direction: column; gap: 4px;
+  }
+  .c-inner.active-target { outline: 2px dashed #fff; background: rgba(255,255,255,0.16); }
+  .c-footer { padding: 3px 10px; font-size: 11px; opacity: 0.85; }
+
+  .block input, .block select {
+    background: #fff; color: #1f2933; border: none; border-radius: 99px;
+    padding: 2px 8px; font-size: 12px; font-weight: 700; outline: none;
+    user-select: text; min-width: 40px;
+  }
+  .block input.num { width: 46px; text-align: center; }
+  .block input.wide { min-width: 125px; }
+
+  .c-events { background: #ffbf00; color: #2b2100; }
+  .c-player { background: #4c97ff; }
+  .c-gui    { background: #9966ff; }
+  .c-world  { background: #59c059; }
+  .c-ctrl   { background: #ffab19; color: #2b1d00; }
+  .c-vars   { background: #ff8c1a; }
+
+  .stack-group {
+    position: relative; display: inline-flex; flex-direction: column; align-items: flex-start;
+    padding: 10px; border-radius: 10px; margin: 0 14px 14px 0; vertical-align: top;
+    background: rgba(255,255,255,0.55); border: 1.5px solid #d5e0ec;
+  }
+  .stack-group.selected { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(76,151,255,0.2); background: #fff; }
+  .stack-header {
+    width: 100%; display: flex; justify-content: space-between; align-items: center;
+    font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px;
+  }
+  .mini-btn {
+    border: none; background: #e2e8f0; color: #334155; border-radius: 4px;
+    padding: 2px 6px; font-size: 11px; font-weight: 700; cursor: pointer;
+  }
+  .mini-btn:hover { background: #cbd5e1; }
+  .mini-btn.del { background: #fee2e2; color: #b91c1c; }
+
+  /* RIGHT PANEL: CODE + SIMULATOR */
+  .right-panel {
+    width: 410px; background: var(--bg-panel); border-left: 1px solid var(--border);
+    display: flex; flex-direction: column;
+  }
+  .tabs { display: flex; border-bottom: 1px solid var(--border); background: #f4f7fa; }
+  .tab {
+    flex: 1; padding: 10px; text-align: center; font-size: 12.5px; font-weight: 700;
+    cursor: pointer; color: var(--text-muted); border-bottom: 2px solid transparent;
+  }
+  .tab.active { color: var(--accent-dark); border-bottom-color: var(--accent); background: #fff; }
+
+  .code-box {
+    flex: 1; background: var(--bg-code); color: #e2e8f0; padding: 14px;
+    font-family: 'Fira Code', Consolas, monospace; font-size: 12.5px; line-height: 1.55;
+    overflow: auto; white-space: pre; user-select: text;
+  }
+  .code-actions {
+    padding: 10px; background: #1e2330; display: flex; gap: 8px; border-top: 1px solid #2d3446;
+  }
+
+  /* MINI MINECRAFT SIMULATOR */
+  .sim-box { flex: 1; display: none; flex-direction: column; background: #181c24; color: #fff; overflow: hidden; }
+  .sim-screen {
+    flex: 1; padding: 10px; display: flex; flex-direction: column; justify-content: space-between;
+    background: linear-gradient(180deg, #5ba4fc 0%, #99c8ff 56%, #5aa13c 56%, #47822e 100%);
+    position: relative; overflow: hidden;
+  }
+  .sim-hud {
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px;
+    background: rgba(0,0,0,0.62); padding: 6px 10px; border-radius: 6px; font-size: 11.5px; font-weight: 700;
+  }
+  .sim-triggers { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 8px 0; z-index: 2; }
+
+  /* INTERACTIVE MINECRAFT CHEST GUI OVERLAY */
+  .mc-chest-overlay {
+    display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.68);
+    align-items: center; justify-content: center; z-index: 15; padding: 12px;
+  }
+  .mc-chest {
+    background: #c6c6c6; border: 3px solid #373737; box-shadow: inset 2px 2px 0 #fff, inset -2px -2px 0 #555;
+    border-radius: 4px; padding: 10px; color: #3f3f3f; width: 100%; max-width: 365px;
+  }
+  .mc-chest-head {
+    display: flex; justify-content: space-between; align-items: center;
+    font-weight: 800; font-size: 13px; margin-bottom: 8px; color: #222;
+  }
+  .mc-grid { display: grid; grid-template-columns: repeat(9, 1fr); gap: 3px; }
+  .mc-slot {
+    aspect-ratio: 1; background: #8b8b8b; border: 2px solid;
+    border-color: #373737 #fff #fff #373737;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-size: 15px; cursor: pointer; position: relative; border-radius: 2px;
+  }
+  .mc-slot:hover { background: #a8a8a8; outline: 2px solid #ffff55; z-index: 2; }
+  .mc-slot-num { position: absolute; top: 1px; left: 2px; font-size: 8px; color: #eee; font-weight: 700; }
+  .mc-slot-tip {
+    display: none; position: absolute; bottom: 110%; left: 50%; transform: translateX(-50%);
+    background: #100010; border: 2px solid #5000ff; color: #fff; padding: 4px 7px;
+    border-radius: 4px; font-size: 11px; white-space: nowrap; z-index: 30; pointer-events: none;
+  }
+  .mc-slot:hover .mc-slot-tip { display: block; }
+
+  .sim-chat {
+    background: rgba(0,0,0,0.76); border-radius: 6px; padding: 8px; height: 145px;
+    overflow-y: auto; font-family: Consolas, monospace; font-size: 11.5px; display: flex; flex-direction: column; gap: 3px;
+  }
+  .sim-input-row { display: flex; gap: 6px; padding: 8px; background: #11141a; }
+  .sim-input-row input {
+    flex: 1; background: #232834; border: 1px solid #384152; color: #fff;
+    padding: 6px 10px; border-radius: 5px; font-size: 12px; user-select: text;
+  }
+
+  /* MODALS */
+  .modal-backdrop {
+    position: fixed; inset: 0; background: rgba(15,23,42,0.58);
+    display: none; align-items: center; justify-content: center; z-index: 100;
+  }
+  .modal {
+    background: #fff; width: 560px; max-width: 94vw; border-radius: 12px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.28); overflow: hidden; display: flex; flex-direction: column;
+  }
+  .modal-head {
+    padding: 14px 18px; background: var(--accent); color: #fff;
+    display: flex; justify-content: space-between; align-items: center; font-weight: 800;
+  }
+  .modal-body { padding: 18px; display: flex; flex-direction: column; gap: 12px; max-height: 76vh; overflow-y: auto; }
+  .field label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 4px; color: var(--text-muted); }
+  .field input, .field textarea {
+    width: 100%; padding: 9px 11px; border: 1px solid var(--border); border-radius: 6px;
+    font-size: 13px; user-select: text;
+  }
+  .card-item {
+    border: 1.5px solid var(--border); border-radius: 9px; padding: 11px 13px;
+    display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  }
+  .card-item:hover { border-color: var(--accent); background: #f8fbff; }
+  .toast {
+    position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+    background: #1e293b; color: #fff; padding: 10px 18px; border-radius: 8px;
+    font-size: 13px; font-weight: 600; z-index: 200; display: none; box-shadow: 0 6px 20px rgba(0,0,0,0.28);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <span>🧩 SKrach</span>
+    <span class="brand-badge">SKRIPT + GUI</span>
+  </div>
+
+  <div class="top-controls">
+    <input id="projectTitle" class="title-input" value="Sklep GUI BoxPvP" placeholder="Nazwa skryptu..." maxlength="60">
+    <button class="btn btn-purple" onclick="openTemplatesModal()">📚 Szablony</button>
+    <button class="btn btn-orange" onclick="openShareModal()">🚀 Opublikuj / Udostępnij</button>
+    <button class="btn btn-white" onclick="downloadSk()">⬇ Pobierz .sk</button>
+  </div>
+</header>
+
+<main>
+  <!-- KATEGORIE -->
+  <aside class="categories" id="catList">
+    <div class="cat-item active" data-cat="events" onclick="selectCat('events')">
+      <div class="cat-dot" style="background:#ffbf00"></div>Wydarzenia
+    </div>
+    <div class="cat-item" data-cat="player" onclick="selectCat('player')">
+      <div class="cat-dot" style="background:#4c97ff"></div>Gracz
+    </div>
+    <div class="cat-item" data-cat="gui" onclick="selectCat('gui')">
+      <div class="cat-dot" style="background:#9966ff"></div>GUI Skrzynia
+    </div>
+    <div class="cat-item" data-cat="world" onclick="selectCat('world')">
+      <div class="cat-dot" style="background:#59c059"></div>Świat
+    </div>
+    <div class="cat-item" data-cat="ctrl" onclick="selectCat('ctrl')">
+      <div class="cat-dot" style="background:#ffab19"></div>Kontrola
+    </div>
+    <div class="cat-item" data-cat="vars" onclick="selectCat('vars')">
+      <div class="cat-dot" style="background:#ff8c1a"></div>Zmienne
+    </div>
+  </aside>
+
+  <!-- PALETA BLOKÓW -->
+  <section class="palette" id="palette"></section>
+
+  <!-- OBSZAR ROBOCZY -->
+  <section class="workspace-wrap">
+    <div class="workspace-bar">
+      <span id="targetInfo">Cel dodawania: <b>Stos #1</b> (kliknij wnętrze bloku C, aby dodawać do środka)</span>
+      <div style="display:flex; gap:6px;">
+        <button class="btn" style="padding:3px 9px; font-size:11px; background:#fff;" onclick="addNewStack()">+ Nowy stos</button>
+        <button class="btn" style="padding:3px 9px; font-size:11px; background:#fee2e2; color:#b91c1c;" onclick="clearWorkspace()">Wyczyść</button>
+      </div>
+    </div>
+    <div id="workspace"></div>
+  </section>
+
+  <!-- PRAWY PANEL: KOD .SK + SYMULATOR -->
+  <aside class="right-panel">
+    <div class="tabs">
+      <div class="tab active" id="tabCode" onclick="switchRightTab('code')">📄 Kod Skript (.sk)</div>
+      <div class="tab" id="tabSim" onclick="switchRightTab('sim')">▶ Testuj na żywo + GUI</div>
+    </div>
+
+    <div id="codeView" style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
+      <div class="code-box" id="codeOutput"></div>
+      <div class="code-actions">
+        <button class="btn btn-green" style="flex:1; justify-content:center;" onclick="copyCode()">📋 Kopiuj kod .sk</button>
+        <button class="btn btn-white" onclick="downloadSk()">💾 Pobierz .sk</button>
+      </div>
+    </div>
+
+    <div class="sim-box" id="simView">
+      <div class="sim-screen">
+        <div class="sim-hud">
+          <span>❤️ 20/20</span>
+          <span id="simVarsHud">Zmienne: brak</span>
+        </div>
+
+        <div class="sim-triggers">
+          <button class="btn btn-orange" onclick="runSimEvent('join')">Wejdź (on join)</button>
+          <button class="btn btn-green" onclick="runSimEvent('break_stone')">Wykop stone</button>
+          <button class="btn btn-purple" onclick="runSimCommand('/sklep')">Otwórz /sklep</button>
+        </div>
+
+        <!-- INTERAKTYWNA SKRZYNIA GUI MINECRAFT -->
+        <div class="mc-chest-overlay" id="mcChestOverlay">
+          <div class="mc-chest">
+            <div class="mc-chest-head">
+              <span id="mcChestTitle">Skrzynia</span>
+              <button class="mini-btn del" onclick="closeSimChest()">✕ Zamknij</button>
+            </div>
+            <div class="mc-grid" id="mcChestGrid"></div>
+          </div>
+        </div>
+
+        <div class="sim-chat" id="simChat">
+          <div style="color:#94a3b8;">[SKrach] Kliknij akcję wyżej lub wpisz komendę (np. /sklep, /kit) poniżej!</div>
+        </div>
+      </div>
+      <div class="sim-input-row">
+        <input id="simCmdInput" placeholder="Wpisz komendę np. /sklep lub /kit..." onkeydown="if(event.key==='Enter') runSimCommand()">
+        <button class="btn btn-green" onclick="runSimCommand()">Wyślij</button>
+      </div>
+    </div>
+  </aside>
+</main>
+
+<!-- MODAL: SZABLONY -->
+<div class="modal-backdrop" id="templatesModal" onclick="if(event.target===this) closeModals()">
+  <div class="modal">
+    <div class="modal-head">
+      <span>📚 Gotowe szablony skryptów Skript</span>
+      <button class="mini-btn" onclick="closeModals()">✕</button>
+    </div>
+    <div class="modal-body" id="templatesList"></div>
+  </div>
+</div>
+
+<!-- MODAL: ANONIMOWA PUBLIKACJA I ZAPIS LOKALNY (BEZ SQL) -->
+<div class="modal-backdrop" id="shareModal" onclick="if(event.target===this) closeModals()">
+  <div class="modal">
+    <div class="modal-head">
+      <span>🚀 Opublikuj anonimowo i udostępnij linkiem (Bez SQL)</span>
+      <button class="mini-btn" onclick="closeModals()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>Nazwa skryptu</label>
+        <input id="pubTitle" placeholder="np. Sklep GUI BoxPvP" maxlength="60">
+      </div>
+      <div class="field">
+        <label>Twój nick (opcjonalnie, domyślnie Anonim)</label>
+        <input id="pubAuthor" placeholder="Anonim" maxlength="32">
+      </div>
+      <button class="btn btn-green" style="justify-content:center;" onclick="publishAnonymous()">✨ Zapisz i wygeneruj link udostępniania</button>
+
+      <div id="shareResultBox" style="display:none; background:#f0fdf4; border:1px solid #86efac; padding:10px; border-radius:8px;">
+        <div style="font-size:12px; font-weight:700; color:#166534; margin-bottom:5px;">Gotowy link do wysłania na Discorda (działa bez bazy SQL!):</div>
+        <div style="display:flex; gap:6px;">
+          <input id="shareUrlInput" readonly style="flex:1; font-size:12px; padding:6px; border:1px solid #bbf7d0; border-radius:5px; user-select:text;">
+          <button class="btn btn-green" onclick="copyShareUrl()">Kopiuj link</button>
+        </div>
+      </div>
+
+      <div style="font-size:12px; font-weight:800; color:var(--text-muted); margin-top:6px;">📁 Zapisane skrypty w Twojej przeglądarce:</div>
+      <div id="savedScriptsList" style="display:flex; flex-direction:column; gap:7px;"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// =========================================================================
+// DEFINICJE KATEGORII I BLOKÓW SKRIPT (W TYM GUI SKRZYNI)
+// =========================================================================
+const BLOCK_DEFS = {
+  events: [
+    { type: 'cmd', cat: 'events', hat: true, cBlock: true, label: ['command /', {k:'name', v:'sklep'}, ':'],
+      toSk: (b, ind, body) => `${ind}command /${b.name}:
+${ind}	trigger:
+${body || ind+'		stop'}` },
+    { type: 'on_join', cat: 'events', hat: true, cBlock: true, label: ['on join:'],
+      toSk: (b, ind, body) => `${ind}on join:
+${body || ind+'	stop'}` },
+    { type: 'on_break', cat: 'events', hat: true, cBlock: true, label: ['on break of ', {k:'block', v:'stone'}, ':'],
+      toSk: (b, ind, body) => `${ind}on break of ${b.block}:
+${body || ind+'	stop'}` },
+    { type: 'on_inv_click', cat: 'events', hat: true, cBlock: true, label: ['on inventory click:'],
+      toSk: (b, ind, body) => `${ind}on inventory click:
+${body || ind+'	stop'}` },
+    { type: 'on_right_click', cat: 'events', hat: true, cBlock: true, label: ['on right click:'],
+      toSk: (b, ind, body) => `${ind}on right click:
+${body || ind+'	stop'}` }
+  ],
+  player: [
+    { type: 'send', cat: 'player', label: ['send ', {k:'msg', v:'&aWitaj na serwerze!', wide:true}, ' to player'],
+      toSk: (b, ind) => `${ind}send "${b.msg}" to player` },
+    { type: 'broadcast', cat: 'player', label: ['broadcast ', {k:'msg', v:'&6[Ogłoszenie] &fStart edycji!', wide:true}],
+      toSk: (b, ind) => `${ind}broadcast "${b.msg}"` },
+    { type: 'give', cat: 'player', label: ['give ', {k:'amount', v:'1', num:true}, ' of ', {k:'item', v:'diamond'}, ' to player'],
+      toSk: (b, ind) => `${ind}give ${b.amount} of ${b.item} to player` },
+    { type: 'sound', cat: 'player', label: ['play sound ', {k:'snd', v:'entity.experience_orb.pickup', wide:true}, ' to player'],
+      toSk: (b, ind) => `${ind}play sound "${b.snd}" to player` },
+    { type: 'actionbar', cat: 'player', label: ['send action bar ', {k:'msg', v:'&e+10$ za wykopanie!', wide:true}, ' to player'],
+      toSk: (b, ind) => `${ind}send action bar "${b.msg}" to player` },
+    { type: 'heal', cat: 'player', label: ['heal player'],
+      toSk: (b, ind) => `${ind}heal player` }
+  ],
+  gui: [
+    { type: 'open_gui', cat: 'gui', label: ['open chest inventory with ', {k:'rows', v:'3', num:true}, ' rows named ', {k:'title', v:'&8Sklep Serwerowy', wide:true}, ' to player'],
+      toSk: (b, ind) => `${ind}open chest inventory with ${b.rows} rows named "${b.title}" to player` },
+    { type: 'format_slot', cat: 'gui', label: ['format slot ', {k:'slot', v:'11', num:true}, ' of player with ', {k:'item', v:'diamond'}, ' named ', {k:'name', v:'&bDiament (100$)', wide:true}],
+      toSk: (b, ind) => `${ind}set slot ${b.slot} of player's current inventory to ${b.item} named "${b.name}"` },
+    { type: 'if_inv_name', cat: 'gui', cBlock: true, label: ['if name of event-inventory is ', {k:'title', v:'&8Sklep Serwerowy', wide:true}, ':'],
+      toSk: (b, ind, body) => `${ind}if name of event-inventory is "${b.title}":
+${body || ind+'	stop'}` },
+    { type: 'if_slot', cat: 'gui', cBlock: true, label: ['if clicked slot is ', {k:'slot', v:'11', num:true}, ':'],
+      toSk: (b, ind, body) => `${ind}if index of event-slot is ${b.slot}:
+${body || ind+'	stop'}` },
+    { type: 'close_gui', cat: 'gui', label: ['close player's inventory'],
+      toSk: (b, ind) => `${ind}close player's inventory` }
+  ],
+  world: [
+    { type: 'strike_lightning', cat: 'world', label: ['strike lightning at player'],
+      toSk: (b, ind) => `${ind}strike lightning at player` },
+    { type: 'set_time', cat: 'world', label: ['set time to ', {k:'time', v:'day'}],
+      toSk: (b, ind) => `${ind}set time to ${b.time}` },
+    { type: 'drop_item', cat: 'world', label: ['drop ', {k:'amount', v:'1', num:true}, ' of ', {k:'item', v:'emerald'}, ' at event-block'],
+      toSk: (b, ind) => `${ind}drop ${b.amount} of ${b.item} at event-block` }
+  ],
+  ctrl: [
+    { type: 'cancel', cat: 'ctrl', label: ['cancel event'],
+      toSk: (b, ind) => `${ind}cancel event` },
+    { type: 'chance', cat: 'ctrl', cBlock: true, label: ['chance of ', {k:'pct', v:'25', num:true}, '%:'],
+      toSk: (b, ind, body) => `${ind}chance of ${b.pct}%:
+${body || ind+'	stop'}` },
+    { type: 'wait', cat: 'ctrl', label: ['wait ', {k:'sec', v:'3', num:true}, ' seconds'],
+      toSk: (b, ind) => `${ind}wait ${b.sec} seconds` },
+    { type: 'stop', cat: 'ctrl', label: ['stop'],
+      toSk: (b, ind) => `${ind}stop` }
+  ],
+  vars: [
+    { type: 'var_add', cat: 'vars', label: ['add ', {k:'val', v:'10', num:true}, ' to {', {k:'vname', v:'kasa.%player%'}, '}'],
+      toSk: (b, ind) => `${ind}add ${b.val} to {${b.vname}}` },
+    { type: 'var_set', cat: 'vars', label: ['set {', {k:'vname', v:'kasa.%player%'}, '} to ', {k:'val', v:'100', num:true}],
+      toSk: (b, ind) => `${ind}set {${b.vname}} to ${b.val}` },
+    { type: 'if_var', cat: 'vars', cBlock: true, label: ['if {', {k:'vname', v:'kasa.%player%'}, '} >= ', {k:'val', v:'100', num:true}, ':'],
+      toSk: (b, ind, body) => `${ind}if {${b.vname}} >= ${b.val}:
+${body || ind+'	stop'}` },
+    { type: 'var_remove', cat: 'vars', label: ['remove ', {k:'val', v:'100', num:true}, ' from {', {k:'vname', v:'kasa.%player%'}, '}'],
+      toSk: (b, ind) => `${ind}remove ${b.val} from {${b.vname}}` }
+  ]
+};
+
+const ALL_DEFS = Object.values(BLOCK_DEFS).flat().reduce((acc, d) => (acc[d.type] = d, acc), {});
+
+// =========================================================================
+// GOTOWE SZABLONY SKRYPTÓW
+// =========================================================================
+const TEMPLATES = [
+  {
+    name: '🛒 Sklep GUI (/sklep) z kupowaniem za kasę',
+    desc: 'Otwiera skrzynię 3-rzędową z Diamentem i Mieczem, sprawdza zmienną {kasa.%player%} i pobiera opłatę po kliknięciu slotu.',
+    stacks: [
+      [
+        { type: 'cmd', name: 'sklep', children: [
+          { type: 'open_gui', rows: '3', title: '&8Sklep Serwerowy' },
+          { type: 'format_slot', slot: '11', item: 'diamond', name: '&bDiament &7(Koszt: 100$)' },
+          { type: 'format_slot', slot: '15', item: 'netherite sword', name: '&cMiecz BoxPvP &7(Koszt: 250$)' }
+        ]}
+      ],
+      [
+        { type: 'on_inv_click', children: [
+          { type: 'if_inv_name', title: '&8Sklep Serwerowy', children: [
+            { type: 'cancel' },
+            { type: 'if_slot', slot: '11', children: [
+              { type: 'if_var', vname: 'kasa.%player%', val: '100', children: [
+                { type: 'var_remove', val: '100', vname: 'kasa.%player%' },
+                { type: 'give', amount: '1', item: 'diamond' },
+                { type: 'send', msg: '&aKupiono Diament za 100$!' },
+                { type: 'sound', snd: 'entity.experience_orb.pickup' }
+              ]}
+            ]},
+            { type: 'if_slot', slot: '15', children: [
+              { type: 'if_var', vname: 'kasa.%player%', val: '250', children: [
+                { type: 'var_remove', val: '250', vname: 'kasa.%player%' },
+                { type: 'give', amount: '1', item: 'netherite sword' },
+                { type: 'send', msg: '&aKupiono Miecz BoxPvP za 250$!' },
+                { type: 'close_gui' }
+              ]}
+            ]}
+          ]}
+        ]}
+      ]
+    ]
+  },
+  {
+    name: '⛏️ Zarabianie za wykopanie Stone + Szansa na Drop',
+    desc: 'Dodaje +25$ do portfela przy każdym wykopanym stone oraz daje 30% szans na dodatkowy diament.',
+    stacks: [
+      [
+        { type: 'on_break', block: 'stone', children: [
+          { type: 'var_add', val: '25', vname: 'kasa.%player%' },
+          { type: 'actionbar', msg: '&a+25$ &7(Wpisz /sklep aby wydać!)' },
+          { type: 'chance', pct: '30', children: [
+            { type: 'give', amount: '1', item: 'diamond' },
+            { type: 'send', msg: '&b[DROP] &fZnalazłeś dodatkowy Diament!' },
+            { type: 'sound', snd: 'entity.player.levelup' }
+          ]}
+        ]}
+      ]
+    ]
+  },
+  {
+    name: '🎁 Komenda /kit + Powitanie nowego gracza',
+    desc: 'Wita gracza przy wejściu, daje mu 200$ na start oraz udostępnia komendę /kit z zestawem startowym.',
+    stacks: [
+      [
+        { type: 'on_join', children: [
+          { type: 'broadcast', msg: '&a+ &f%player% dołączył na serwer!' },
+          { type: 'var_set', vname: 'kasa.%player%', val: '200' },
+          { type: 'send', msg: '&eOtrzymałeś &a200$ &ena start! Wpisz &6/kit &eaby odebrać eq.' }
+        ]}
+      ],
+      [
+        { type: 'cmd', name: 'kit', children: [
+          { type: 'give', amount: '1', item: 'iron sword' },
+          { type: 'give', amount: '16', item: 'cooked beef' },
+          { type: 'heal' },
+          { type: 'send', msg: '&aOdebrałeś zestaw startowy!' }
+        ]}
+      ]
+    ]
+  }
+];
+
+// =========================================================================
+// STAN EDYTORA
+// =========================================================================
+let currentCat = 'events';
+let stacks = JSON.parse(JSON.stringify(TEMPLATES[0].stacks));
+let selectedStackIdx = 0;
+let activeContainerRef = null; // referencja do tablicy children wybranego bloku C
+
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.display = 'block';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.style.display = 'none', 2800);
+}
+
+function selectCat(cat) {
+  currentCat = cat;
+  document.querySelectorAll('.cat-item').forEach(el => el.classList.toggle('active', el.dataset.cat === cat));
+  renderPalette();
+}
+
+function renderPalette() {
+  const pal = document.getElementById('palette');
+  pal.innerHTML = `<div class="palette-title">Kliknij blok, aby dodać</div>`;
+  BLOCK_DEFS[currentCat].forEach(def => {
+    const el = document.createElement('div');
+    el.className = `block c-${def.cat} ${def.hat ? 'hat' : ''}`;
+    const row = document.createElement('div');
+    row.className = 'block-row';
+    def.label.forEach(part => {
+      if (typeof part === 'string') {
+        const s = document.createElement('span');
+        s.textContent = part;
+        row.appendChild(s);
+      } else {
+        const badge = document.createElement('span');
+        badge.style.cssText = 'background:#fff;color:#1f2933;padding:1px 7px;border-radius:99px;font-size:11px;';
+        badge.textContent = part.v;
+        row.appendChild(badge);
+      }
+    });
+    el.appendChild(row);
+    el.onclick = () => addBlockFromDef(def);
+    pal.appendChild(el);
+  });
+}
+
+function addBlockFromDef(def) {
+  const newBlock = { type: def.type };
+  def.label.forEach(p => { if (typeof p === 'object') newBlock[p.k] = p.v; });
+  if (def.cBlock) newBlock.children = [];
+
+  if (def.hat) {
+    stacks.push([newBlock]);
+    selectedStackIdx = stacks.length - 1;
+    activeContainerRef = newBlock.children;
+  } else {
+    if (!stacks.length) stacks.push([]);
+    if (activeContainerRef) {
+      activeContainerRef.push(newBlock);
+    } else {
+      stacks[selectedStackIdx].push(newBlock);
+    }
+    if (def.cBlock) activeContainerRef = newBlock.children;
+  }
+  renderWorkspace();
+}
+
+function addNewStack() {
+  stacks.push([]);
+  selectedStackIdx = stacks.length - 1;
+  activeContainerRef = null;
+  renderWorkspace();
+}
+
+function clearWorkspace() {
+  stacks = [[]];
+  selectedStackIdx = 0;
+  activeContainerRef = null;
+  renderWorkspace();
+  showToast('Wyczyszczono obszar roboczy');
+}
+
+function renderBlockNode(block, parentArray, idx) {
+  const def = ALL_DEFS[block.type];
+  if (!def) return document.createTextNode('');
+  const el = document.createElement('div');
+  el.className = `block c-${def.cat} ${def.hat ? 'hat' : ''}`;
+
+  const row = document.createElement('div');
+  row.className = 'block-row';
+
+  def.label.forEach(part => {
+    if (typeof part === 'string') {
+      const span = document.createElement('span');
+      span.textContent = part;
+      row.appendChild(span);
+    } else {
+      const inp = document.createElement('input');
+      inp.value = block[part.k] ?? part.v;
+      if (part.num) inp.className = 'num';
+      if (part.wide) inp.className = 'wide';
+      inp.onclick = e => e.stopPropagation();
+      inp.oninput = e => {
+        block[part.k] = e.target.value;
+        updateCodeOutput();
+      };
+      row.appendChild(inp);
+    }
+  });
+
+  const delBtn = document.createElement('button');
+  delBtn.textContent = '✕';
+  delBtn.style.cssText = 'margin-left:auto;background:rgba(0,0,0,0.22);border:none;color:#fff;border-radius:4px;padding:1px 5px;cursor:pointer;font-size:10px;';
+  delBtn.onclick = e => {
+    e.stopPropagation();
+    if (activeContainerRef === block.children) activeContainerRef = null;
+    parentArray.splice(idx, 1);
+    renderWorkspace();
+  };
+  row.appendChild(delBtn);
+  el.appendChild(row);
+
+  if (def.cBlock) {
+    const inner = document.createElement('div');
+    inner.className = 'c-inner' + (activeContainerRef === block.children ? ' active-target' : '');
+    inner.onclick = e => {
+      e.stopPropagation();
+      activeContainerRef = block.children;
+      renderWorkspace();
+    };
+    if (!block.children || block.children.length === 0) {
+      const hint = document.createElement('span');
+      hint.style.cssText = 'font-size:11px;opacity:0.75;';
+      hint.textContent = '+ kliknij tutaj, aby dodawać bloki do środka';
+      inner.appendChild(hint);
+    } else {
+      block.children.forEach((child, cIdx) => {
+        inner.appendChild(renderBlockNode(child, block.children, cIdx));
+      });
+    }
+    el.appendChild(inner);
+    const foot = document.createElement('div');
+    foot.className = 'c-footer';
+    foot.textContent = 'end';
+    el.appendChild(foot);
+  }
+  return el;
+}
+
+function renderWorkspace() {
+  const ws = document.getElementById('workspace');
+  ws.innerHTML = '';
+  document.getElementById('targetInfo').innerHTML = activeContainerRef
+    ? `Cel dodawania: <b>Wnętrze wybranego bloku C</b> (<a href="#" onclick="activeContainerRef=null;renderWorkspace();return false;">wróć na dół stosu</a>)`
+    : `Cel dodawania: <b>Stos #${selectedStackIdx + 1}</b>`;
+
+  stacks.forEach((stack, sIdx) => {
+    const grp = document.createElement('div');
+    grp.className = 'stack-group' + (sIdx === selectedStackIdx ? ' selected' : '');
+    grp.onclick = () => {
+      selectedStackIdx = sIdx;
+      activeContainerRef = null;
+      renderWorkspace();
+    };
+
+    const head = document.createElement('div');
+    head.className = 'stack-header';
+    head.innerHTML = `<span>Stos #${sIdx + 1}</span>`;
+    const delStack = document.createElement('button');
+    delStack.className = 'mini-btn del';
+    delStack.textContent = 'Usuń stos';
+    delStack.onclick = e => {
+      e.stopPropagation();
+      stacks.splice(sIdx, 1);
+      if (!stacks.length) stacks.push([]);
+      selectedStackIdx = 0;
+      activeContainerRef = null;
+      renderWorkspace();
+    };
+    head.appendChild(delStack);
+    grp.appendChild(head);
+
+    if (!stack.length) {
+      const empty = document.createElement('div');
+      empty.style.cssText = 'font-size:12px;color:#64748b;padding:12px;';
+      empty.textContent = 'Pusty stos — wybierz blok z lewej palety';
+      grp.appendChild(empty);
+    } else {
+      stack.forEach((blk, bIdx) => grp.appendChild(renderBlockNode(blk, stack, bIdx)));
+    }
+    ws.appendChild(grp);
+  });
+
+  updateCodeOutput();
+}
+
+// =========================================================================
+// GENERATOR KODU .SK
+// =========================================================================
+function compileBlocks(list, indentLevel) {
+  const ind = '	'.repeat(indentLevel);
+  return list.map(b => {
+    const def = ALL_DEFS[b.type];
+    if (!def) return '';
+    if (def.cBlock) {
+      const innerIndent = b.type === 'cmd' ? indentLevel + 2 : indentLevel + 1;
+      const bodyCode = compileBlocks(b.children || [], innerIndent);
+      return def.toSk(b, ind, bodyCode);
+    }
+    return def.toSk(b, ind);
+  }).filter(Boolean).join('
+');
+}
+
+function generateFullSkript() {
+  const title = document.getElementById('projectTitle').value || 'Skrypt';
+  const header = `# ==========================================
+# Wygenerowano w SKrach (Scratch dla Skript)
+# Projekt: ${title}
+# ==========================================
+
+`;
+  const body = stacks.map(st => compileBlocks(st, 0)).filter(Boolean).join('
+
+');
+  return header + (body || '# Dodaj bloki po lewej stronie, aby wygenerować kod!');
+}
+
+function updateCodeOutput() {
+  document.getElementById('codeOutput').textContent = generateFullSkript();
+}
+
+function copyCode() {
+  navigator.clipboard.writeText(generateFullSkript());
+  showToast('Skopiowano gotowy kod .sk do schowka!');
+}
+
+function downloadSk() {
+  const title = (document.getElementById('projectTitle').value || 'skrypt').toLowerCase().replace(/[^a-z0-9_-]/g, '_');
+  const blob = new Blob([generateFullSkript()], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${title || 'skrypt'}.sk`;
+  a.click();
+  showToast(`Pobrano plik ${title || 'skrypt'}.sk`);
+}
+
+// =========================================================================
+// INTERAKTYWNY SYMULATOR MINECRAFT + SKRZYNIA GUI NA ŻYWO
+// =========================================================================
+const simState = {
+  vars: { 'kasa.Gracz': 150 },
+  chestOpen: false,
+  chestTitle: '',
+  chestRows: 3,
+  chestItems: {},
+  lastClickedSlot: -1
+};
+
+const ITEM_ICONS = {
+  diamond: '💎', emerald: '💚', 'netherite sword': '🗡️', 'iron sword': '⚔️',
+  'cooked beef': '🥩', gold: '🪙', stone: '🪨', apple: '🍎', barrier: '⛔'
+};
+
+function getItemIcon(name) {
+  const low = String(name || '').toLowerCase();
+  for (const [k, icon] of Object.entries(ITEM_ICONS)) {
+    if (low.includes(k)) return icon;
+  }
+  return '📦';
+}
+
+function formatMcColors(str) {
+  const map = { '0':'#000','1':'#00a','2':'#0a0','3':'#0aa','4':'#a00','5':'#a0a','6':'#fa0','7':'#aaa','8':'#777','9':'#55f','a':'#5f5','b':'#5ff','c':'#f55','d':'#f5f','e':'#ff5','f':'#fff' };
+  let color = '#ffffff';
+  let html = '';
+  const txt = String(str).replace(/%player%/g, 'Gracz');
+  for (let i = 0; i < txt.length; i++) {
+    if (txt[i] === '&' && map[txt[i+1]?.toLowerCase()]) {
+      color = map[txt[i+1].toLowerCase()];
+      i++;
+    } else if (txt[i] === '&' && (txt[i+1] === 'l' || txt[i+1] === 'r')) {
+      i++;
+    } else {
+      html += `<span style="color:${color}">${txt[i].replace(/</g,'&lt;')}</span>`;
+    }
+  }
+  return html;
+}
+
+function logSim(msg) {
+  const chat = document.getElementById('simChat');
+  const line = document.createElement('div');
+  line.innerHTML = formatMcColors(msg);
+  chat.appendChild(line);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function updateVarsHud() {
+  const entries = Object.entries(simState.vars).map(([k, v]) => `{${k}}: ${v}`);
+  document.getElementById('simVarsHud').textContent = entries.length ? entries.join(' | ') : 'Zmienne: brak';
+}
+
+function resolveVarName(raw) {
+  return String(raw || '').replace(/%player%/g, 'Gracz');
+}
+
+function renderSimChest() {
+  const overlay = document.getElementById('mcChestOverlay');
+  if (!simState.chestOpen) {
+    overlay.style.display = 'none';
+    return;
+  }
+  overlay.style.display = 'flex';
+  document.getElementById('mcChestTitle').innerHTML = formatMcColors(simState.chestTitle);
+  const grid = document.getElementById('mcChestGrid');
+  grid.innerHTML = '';
+  const total = Math.min(54, Math.max(9, simState.chestRows * 9));
+  for (let s = 0; s < total; s++) {
+    const slotEl = document.createElement('div');
+    slotEl.className = 'mc-slot';
+    slotEl.innerHTML = `<span class="mc-slot-num">${s}</span>`;
+    const it = simState.chestItems[s];
+    if (it) {
+      slotEl.innerHTML += `<span>${getItemIcon(it.item)}</span><div class="mc-slot-tip">${formatMcColors(it.name)}</div>`;
+    }
+    slotEl.onclick = () => {
+      simState.lastClickedSlot = s;
+      logSim(`&7[GUI] Kliknięto slot #${s}`);
+      executeEventType('on_inv_click');
+    };
+    grid.appendChild(slotEl);
+  }
+}
+
+function closeSimChest() {
+  simState.chestOpen = false;
+  renderSimChest();
+}
+
+function executeList(list) {
+  for (const b of list) {
+    if (b.type === 'send') logSim(b.msg);
+    else if (b.type === 'broadcast') logSim(`&e[BC] ${b.msg}`);
+    else if (b.type === 'actionbar') logSim(`&d[ActionBar] ${b.msg}`);
+    else if (b.type === 'give') logSim(`&7+ Otrzymano &f${b.amount}x ${b.item}`);
+    else if (b.type === 'sound') logSim(`&b♪ Dźwięk: ${b.snd}`);
+    else if (b.type === 'heal') logSim(`&c❤️ Uleczono gracza do pełna!`);
+    else if (b.type === 'strike_lightning') logSim(`&e⚡ Uderzył piorun!`);
+    else if (b.type === 'set_time') logSim(`&6🕒 Ustawiono czas na: ${b.time}`);
+    else if (b.type === 'open_gui') {
+      simState.chestOpen = true;
+      simState.chestRows = parseInt(b.rows, 10) || 3;
+      simState.chestTitle = b.title || 'Skrzynia';
+      simState.chestItems = {};
+      renderSimChest();
+    }
+    else if (b.type === 'format_slot') {
+      simState.chestItems[parseInt(b.slot, 10) || 0] = { item: b.item, name: b.name };
+      renderSimChest();
+    }
+    else if (b.type === 'close_gui') closeSimChest();
+    else if (b.type === 'if_inv_name') {
+      if (simState.chestTitle === b.title) executeList(b.children || []);
+    }
+    else if (b.type === 'if_slot') {
+      if (simState.lastClickedSlot === (parseInt(b.slot, 10) || 0)) executeList(b.children || []);
+    }
+    else if (b.type === 'chance') {
+      const pct = parseFloat(b.pct) || 0;
+      if (Math.random() * 100 <= pct) executeList(b.children || []);
+    }
+    else if (b.type === 'var_set') {
+      simState.vars[resolveVarName(b.vname)] = Number(b.val) || 0;
+      updateVarsHud();
+    }
+    else if (b.type === 'var_add') {
+      const k = resolveVarName(b.vname);
+      simState.vars[k] = (Number(simState.vars[k]) || 0) + (Number(b.val) || 0);
+      updateVarsHud();
+    }
+    else if (b.type === 'var_remove') {
+      const k = resolveVarName(b.vname);
+      simState.vars[k] = (Number(simState.vars[k]) || 0) - (Number(b.val) || 0);
+      updateVarsHud();
+    }
+    else if (b.type === 'if_var') {
+      const k = resolveVarName(b.vname);
+      const cur = Number(simState.vars[k]) || 0;
+      const req = Number(b.val) || 0;
+      if (cur >= req) executeList(b.children || []);
+      else logSim(`&c✖ Warunek nie spełniony: {${k}} wynosi ${cur} (wymagane >= ${req})`);
+    }
+  }
+}
+
+function executeEventType(type, extraMatch) {
+  stacks.forEach(st => {
+    const hat = st[0];
+    if (!hat || hat.type !== type) return;
+    if (extraMatch && !extraMatch(hat)) return;
+    executeList(hat.children || []);
+  });
+}
+
+function runSimEvent(ev) {
+  if (ev === 'join') {
+    logSim('&7--- Gracz dołączył do gry ---');
+    executeEventType('on_join');
+  } else if (ev === 'break_stone') {
+    logSim('&7--- Wykopano blok: stone ---');
+    executeEventType('on_break', h => (h.block || '').toLowerCase() === 'stone');
+  }
+}
+
+function runSimCommand(overrideCmd) {
+  const inp = document.getElementById('simCmdInput');
+  const raw = (overrideCmd || inp.value || '').trim();
+  if (!raw) return;
+  if (!overrideCmd) inp.value = '';
+  const cmdName = raw.replace(/^\//, '').split(' ')[0].toLowerCase();
+  logSim(`&8> &f/${cmdName}`);
+  let found = false;
+  stacks.forEach(st => {
+    const hat = st[0];
+    if (hat && hat.type === 'cmd' && (hat.name || '').toLowerCase() === cmdName) {
+      found = true;
+      executeList(hat.children || []);
+    }
+  });
+  if (!found) logSim(`&cNieznana komenda /${cmdName} (dodaj blok command /${cmdName}:)`);
+}
+
+function switchRightTab(tab) {
+  document.getElementById('tabCode').classList.toggle('active', tab === 'code');
+  document.getElementById('tabSim').classList.toggle('active', tab === 'sim');
+  document.getElementById('codeView').style.display = tab === 'code' ? 'flex' : 'none';
+  document.getElementById('simView').style.display = tab === 'sim' ? 'flex' : 'none';
+  updateVarsHud();
+}
+
+// =========================================================================
+// SZABLONY ORAZ ANONIMOWE UDOSTĘPNIANIE BEZ SQL (URL HASH + LOCALSTORAGE)
+// =========================================================================
+function openTemplatesModal() {
+  const box = document.getElementById('templatesList');
+  box.innerHTML = '';
+  TEMPLATES.forEach(tpl => {
+    const card = document.createElement('div');
+    card.className = 'card-item';
+    card.innerHTML = `<div><div style="font-weight:800;font-size:13.5px;">${tpl.name}</div><div style="font-size:12px;color:#627d98;margin-top:2px;">${tpl.desc}</div></div>`;
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-purple';
+    btn.textContent = 'Wczytaj';
+    btn.onclick = () => {
+      stacks = JSON.parse(JSON.stringify(tpl.stacks));
+      selectedStackIdx = 0;
+      activeContainerRef = null;
+      document.getElementById('projectTitle').value = tpl.name.replace(/^[^\wąćęłńóśźżĄĆĘŁŃÓŚŹŻ]+\s*/, '');
+      renderWorkspace();
+      closeModals();
+      showToast('Wczytano szablon!');
+    };
+    card.appendChild(btn);
+    box.appendChild(card);
+  });
+  document.getElementById('templatesModal').style.display = 'flex';
+}
+
+function encodeProjectToHash(payload) {
+  const json = JSON.stringify(payload);
+  return btoa(encodeURIComponent(json));
+}
+
+function decodeProjectFromHash(hashStr) {
+  try {
+    return JSON.parse(decodeURIComponent(atob(hashStr)));
+  } catch { return null; }
+}
+
+function openShareModal() {
+  document.getElementById('pubTitle').value = document.getElementById('projectTitle').value || 'Mój Skrypt';
+  document.getElementById('shareResultBox').style.display = 'none';
+  renderSavedScriptsList();
+  document.getElementById('shareModal').style.display = 'flex';
+}
+
+function publishAnonymous() {
+  const title = (document.getElementById('pubTitle').value || '').trim() || 'Bez nazwy';
+  const author = (document.getElementById('pubAuthor').value || '').trim() || 'Anonim';
+  document.getElementById('projectTitle').value = title;
+
+  const payload = { t: title, a: author, s: stacks, d: new Date().toLocaleDateString('pl-PL') };
+  const encoded = encodeProjectToHash(payload);
+  const url = `${location.origin}${location.pathname}#s=${encoded}`;
+  history.replaceState(null, '', `#s=${encoded}`);
+
+  const list = JSON.parse(localStorage.getItem('skrach_scripts_v1') || '[]');
+  list.unshift({ title, author, date: payload.d, hash: encoded });
+  localStorage.setItem('skrach_scripts_v1', JSON.stringify(list.slice(0, 30)));
+
+  document.getElementById('shareUrlInput').value = url;
+  document.getElementById('shareResultBox').style.display = 'block';
+  renderSavedScriptsList();
+  showToast('Zapisano i wygenerowano link udostępniania!');
+}
+
+function copyShareUrl() {
+  const inp = document.getElementById('shareUrlInput');
+  inp.select();
+  navigator.clipboard.writeText(inp.value);
+  showToast('Skopiowano link do schowka!');
+}
+
+function renderSavedScriptsList() {
+  const box = document.getElementById('savedScriptsList');
+  const list = JSON.parse(localStorage.getItem('skrach_scripts_v1') || '[]');
+  box.innerHTML = list.length ? '' : '<div style="font-size:12px;color:#94a3b8;">Brak zapisanych skryptów. Kliknij przycisk wyżej, aby zapisać pierwszy!</div>';
+  list.forEach((item, idx) => {
+    const row = document.createElement('div');
+    row.className = 'card-item';
+    row.innerHTML = `<div><div style="font-weight:700;font-size:13px;">${item.title}</div><div style="font-size:11px;color:#627d98;">Autor: <b>${item.author}</b> • ${item.date}</div></div>`;
+    const actions = document.createElement('div');
+    actions.style.display = 'flex';
+    actions.style.gap = '5px';
+
+    const openBtn = document.createElement('button');
+    openBtn.className = 'btn btn-white';
+    openBtn.style.border = '1px solid #cbd5e1';
+    openBtn.textContent = 'Otwórz';
+    openBtn.onclick = () => {
+      const data = decodeProjectFromHash(item.hash);
+      if (data && data.s) {
+        stacks = data.s;
+        document.getElementById('projectTitle').value = data.t || item.title;
+        selectedStackIdx = 0;
+        activeContainerRef = null;
+        renderWorkspace();
+        closeModals();
+        showToast(`Wczytano: ${item.title}`);
+      }
+    };
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'mini-btn del';
+    delBtn.textContent = '✕';
+    delBtn.onclick = () => {
+      list.splice(idx, 1);
+      localStorage.setItem('skrach_scripts_v1', JSON.stringify(list));
+      renderSavedScriptsList();
+    };
+
+    actions.append(openBtn, delBtn);
+    row.appendChild(actions);
+    box.appendChild(row);
+  });
+}
+
+function closeModals() {
+  document.querySelectorAll('.modal-backdrop').forEach(m => m.style.display = 'none');
+}
+
+// =========================================================================
+// START APLIKACJI + ODCZYT PROJEKTU Z LINKU (#s=...)
+// =========================================================================
+window.addEventListener('DOMContentLoaded', () => {
+  if (location.hash.startsWith('#s=')) {
+    const shared = decodeProjectFromHash(location.hash.slice(3));
+    if (shared && Array.isArray(shared.s)) {
+      stacks = shared.s;
+      document.getElementById('projectTitle').value = shared.t || 'Udostępniony skrypt';
+      showToast(`Wczytano skrypt "${shared.t}" (Autor: ${shared.a || 'Anonim'})`);
+    }
+  }
+  renderPalette();
+  renderWorkspace();
+});
+</script>
+</body>
+</html>
