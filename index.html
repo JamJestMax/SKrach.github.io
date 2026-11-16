@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SKrach — Wizualny Edytor Skript Minecraft</title>
+<title>SKrach — Visual Skript Editor for Minecraft</title>
 <style>
   :root {
     --bg-main: #f9f9f9;
@@ -32,11 +32,17 @@
   .top-controls { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
   .title-input {
     background: rgba(255,255,255,0.22); border: 1px solid rgba(255,255,255,0.45);
-    color: #fff; padding: 6px 11px; border-radius: 6px; font-weight: 600; font-size: 13px; width: 185px;
+    color: #fff; padding: 6px 11px; border-radius: 6px; font-weight: 600; font-size: 13px; width: 175px;
     user-select: text;
   }
   .title-input::placeholder { color: rgba(255,255,255,0.82); }
   .title-input:focus { outline: none; background: rgba(255,255,255,0.32); border-color: #fff; }
+
+  .lang-select {
+    background: rgba(0,0,0,0.22); color: #fff; border: 1px solid rgba(255,255,255,0.4);
+    border-radius: 6px; padding: 6px 8px; font-size: 12.5px; font-weight: 700; cursor: pointer; outline: none;
+  }
+  .lang-select option { color: #1f2933; background: #fff; }
 
   .btn {
     border: none; border-radius: 6px; padding: 7px 12px; font-size: 12.5px; font-weight: 700;
@@ -59,11 +65,11 @@
 
   /* CATEGORIES SIDEBAR */
   .categories {
-    width: 78px; background: var(--bg-panel); border-right: 1px solid var(--border);
+    width: 82px; background: var(--bg-panel); border-right: 1px solid var(--border);
     display: flex; flex-direction: column; align-items: center; padding-top: 10px; gap: 6px;
   }
   .cat-item {
-    width: 66px; padding: 8px 4px; border-radius: 8px; cursor: pointer;
+    width: 72px; padding: 8px 4px; border-radius: 8px; cursor: pointer;
     display: flex; flex-direction: column; align-items: center; gap: 4px;
     font-size: 11px; font-weight: 700; color: var(--text-muted); text-align: center;
   }
@@ -72,7 +78,7 @@
 
   /* BLOCK PALETTE */
   .palette {
-    width: 280px; background: var(--bg-panel); border-right: 1px solid var(--border);
+    width: 285px; background: var(--bg-panel); border-right: 1px solid var(--border);
     padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 9px;
   }
   .palette-title { font-size: 11.5px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); margin-bottom: 2px; }
@@ -103,7 +109,7 @@
   }
   .block.hat { border-radius: 16px 16px 6px 6px; padding-top: 3px; }
   .c-inner {
-    margin-left: 16px; padding: 6px 8px; min-height: 34px; min-width: 210px;
+    margin-left: 16px; padding: 6px 8px; min-height: 34px; min-width: 215px;
     background: rgba(0,0,0,0.14); border-left: 3px solid rgba(255,255,255,0.4);
     border-radius: 4px 0 0 4px; display: flex; flex-direction: column; gap: 4px;
   }
@@ -144,7 +150,7 @@
 
   /* RIGHT PANEL: CODE + SIMULATOR */
   .right-panel {
-    width: 410px; background: var(--bg-panel); border-left: 1px solid var(--border);
+    width: 420px; background: var(--bg-panel); border-left: 1px solid var(--border);
     display: flex; flex-direction: column;
   }
   .tabs { display: flex; border-bottom: 1px solid var(--border); background: #f4f7fa; }
@@ -172,7 +178,7 @@
   }
   .sim-hud {
     display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px;
-    background: rgba(0,0,0,0.62); padding: 6px 10px; border-radius: 6px; font-size: 11.5px; font-weight: 700;
+    background: rgba(0,0,0,0.65); padding: 6px 10px; border-radius: 6px; font-size: 11.5px; font-weight: 700;
   }
   .sim-triggers { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 8px 0; z-index: 2; }
 
@@ -206,7 +212,7 @@
   .mc-slot:hover .mc-slot-tip { display: block; }
 
   .sim-chat {
-    background: rgba(0,0,0,0.76); border-radius: 6px; padding: 8px; height: 145px;
+    background: rgba(0,0,0,0.78); border-radius: 6px; padding: 8px; height: 150px;
     overflow-y: auto; font-family: Consolas, monospace; font-size: 11.5px; display: flex; flex-direction: column; gap: 3px;
   }
   .sim-input-row { display: flex; gap: 6px; padding: 8px; background: #11141a; }
@@ -255,10 +261,14 @@
   </div>
 
   <div class="top-controls">
-    <input id="projectTitle" class="title-input" value="Sklep GUI BoxPvP" placeholder="Nazwa skryptu..." maxlength="60">
-    <button class="btn btn-purple" onclick="openTemplatesModal()">📚 Szablony</button>
-    <button class="btn btn-orange" onclick="openShareModal()">🚀 Opublikuj / Udostępnij</button>
-    <button class="btn btn-white" onclick="downloadSk()">⬇ Pobierz .sk</button>
+    <select id="langSwitcher" class="lang-select" onchange="setLanguage(this.value)" title="Language / Język">
+      <option value="pl">🇵🇱 Polski</option>
+      <option value="en">🇬🇧 English</option>
+    </select>
+    <input id="projectTitle" class="title-input" value="Sklep GUI BoxPvP" maxlength="60">
+    <button class="btn btn-purple" id="btnTemplates" onclick="openTemplatesModal()">📚 Szablony</button>
+    <button class="btn btn-orange" id="btnShare" onclick="openShareModal()">🚀 Opublikuj / Udostępnij</button>
+    <button class="btn btn-white" id="btnDownload" onclick="downloadSk()">⬇ Pobierz .sk</button>
   </div>
 </header>
 
@@ -266,22 +276,22 @@
   <!-- KATEGORIE -->
   <aside class="categories" id="catList">
     <div class="cat-item active" data-cat="events" onclick="selectCat('events')">
-      <div class="cat-dot" style="background:#ffbf00"></div>Wydarzenia
+      <div class="cat-dot" style="background:#ffbf00"></div><span id="cat_events">Wydarzenia</span>
     </div>
     <div class="cat-item" data-cat="player" onclick="selectCat('player')">
-      <div class="cat-dot" style="background:#4c97ff"></div>Gracz
+      <div class="cat-dot" style="background:#4c97ff"></div><span id="cat_player">Gracz</span>
     </div>
     <div class="cat-item" data-cat="gui" onclick="selectCat('gui')">
-      <div class="cat-dot" style="background:#9966ff"></div>GUI Skrzynia
+      <div class="cat-dot" style="background:#9966ff"></div><span id="cat_gui">GUI Skrzynia</span>
     </div>
     <div class="cat-item" data-cat="world" onclick="selectCat('world')">
-      <div class="cat-dot" style="background:#59c059"></div>Świat
+      <div class="cat-dot" style="background:#59c059"></div><span id="cat_world">Świat</span>
     </div>
     <div class="cat-item" data-cat="ctrl" onclick="selectCat('ctrl')">
-      <div class="cat-dot" style="background:#ffab19"></div>Kontrola
+      <div class="cat-dot" style="background:#ffab19"></div><span id="cat_ctrl">Kontrola</span>
     </div>
     <div class="cat-item" data-cat="vars" onclick="selectCat('vars')">
-      <div class="cat-dot" style="background:#ff8c1a"></div>Zmienne
+      <div class="cat-dot" style="background:#ff8c1a"></div><span id="cat_vars">Zmienne</span>
     </div>
   </aside>
 
@@ -291,10 +301,10 @@
   <!-- OBSZAR ROBOCZY -->
   <section class="workspace-wrap">
     <div class="workspace-bar">
-      <span id="targetInfo">Cel dodawania: <b>Stos #1</b> (kliknij wnętrze bloku C, aby dodawać do środka)</span>
+      <span id="targetInfo"></span>
       <div style="display:flex; gap:6px;">
-        <button class="btn" style="padding:3px 9px; font-size:11px; background:#fff;" onclick="addNewStack()">+ Nowy stos</button>
-        <button class="btn" style="padding:3px 9px; font-size:11px; background:#fee2e2; color:#b91c1c;" onclick="clearWorkspace()">Wyczyść</button>
+        <button class="btn" id="btnNewStack" style="padding:3px 9px; font-size:11px; background:#fff;" onclick="addNewStack()">+ Nowy stos</button>
+        <button class="btn" id="btnClear" style="padding:3px 9px; font-size:11px; background:#fee2e2; color:#b91c1c;" onclick="clearWorkspace()">Wyczyść</button>
       </div>
     </div>
     <div id="workspace"></div>
@@ -310,42 +320,36 @@
     <div id="codeView" style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
       <div class="code-box" id="codeOutput"></div>
       <div class="code-actions">
-        <button class="btn btn-green" style="flex:1; justify-content:center;" onclick="copyCode()">📋 Kopiuj kod .sk</button>
-        <button class="btn btn-white" onclick="downloadSk()">💾 Pobierz .sk</button>
+        <button class="btn btn-green" id="btnCopyCode" style="flex:1; justify-content:center;" onclick="copyCode()">📋 Kopiuj kod .sk</button>
+        <button class="btn btn-white" id="btnDownload2" onclick="downloadSk()">💾 Pobierz .sk</button>
       </div>
     </div>
 
     <div class="sim-box" id="simView">
       <div class="sim-screen">
         <div class="sim-hud">
-          <span>❤️ 20/20</span>
+          <span id="simHpHud">❤️ 20/20</span>
           <span id="simVarsHud">Zmienne: brak</span>
         </div>
 
-        <div class="sim-triggers">
-          <button class="btn btn-orange" onclick="runSimEvent('join')">Wejdź (on join)</button>
-          <button class="btn btn-green" onclick="runSimEvent('break_stone')">Wykop stone</button>
-          <button class="btn btn-purple" onclick="runSimCommand('/sklep')">Otwórz /sklep</button>
-        </div>
+        <div class="sim-triggers" id="simTriggersBox"></div>
 
         <!-- INTERAKTYWNA SKRZYNIA GUI MINECRAFT -->
         <div class="mc-chest-overlay" id="mcChestOverlay">
           <div class="mc-chest">
             <div class="mc-chest-head">
-              <span id="mcChestTitle">Skrzynia</span>
-              <button class="mini-btn del" onclick="closeSimChest()">✕ Zamknij</button>
+              <span id="mcChestTitle">Chest</span>
+              <button class="mini-btn del" id="btnCloseChest" onclick="closeSimChest()">✕ Zamknij</button>
             </div>
             <div class="mc-grid" id="mcChestGrid"></div>
           </div>
         </div>
 
-        <div class="sim-chat" id="simChat">
-          <div style="color:#94a3b8;">[SKrach] Kliknij akcję wyżej lub wpisz komendę (np. /sklep, /kit) poniżej!</div>
-        </div>
+        <div class="sim-chat" id="simChat"></div>
       </div>
       <div class="sim-input-row">
-        <input id="simCmdInput" placeholder="Wpisz komendę np. /sklep lub /kit..." onkeydown="if(event.key==='Enter') runSimCommand()">
-        <button class="btn btn-green" onclick="runSimCommand()">Wyślij</button>
+        <input id="simCmdInput" onkeydown="if(event.key==='Enter') runSimCommand()">
+        <button class="btn btn-green" id="btnSimSend" onclick="runSimCommand()">Wyślij</button>
       </div>
     </div>
   </aside>
@@ -355,7 +359,7 @@
 <div class="modal-backdrop" id="templatesModal" onclick="if(event.target===this) closeModals()">
   <div class="modal">
     <div class="modal-head">
-      <span>📚 Gotowe szablony skryptów Skript</span>
+      <span id="modalTplTitle">📚 Gotowe szablony skryptów Skript</span>
       <button class="mini-btn" onclick="closeModals()">✕</button>
     </div>
     <div class="modal-body" id="templatesList"></div>
@@ -366,29 +370,29 @@
 <div class="modal-backdrop" id="shareModal" onclick="if(event.target===this) closeModals()">
   <div class="modal">
     <div class="modal-head">
-      <span>🚀 Opublikuj anonimowo i udostępnij linkiem (Bez SQL)</span>
+      <span id="modalShareTitle">🚀 Opublikuj anonimowo i udostępnij linkiem</span>
       <button class="mini-btn" onclick="closeModals()">✕</button>
     </div>
     <div class="modal-body">
       <div class="field">
-        <label>Nazwa skryptu</label>
-        <input id="pubTitle" placeholder="np. Sklep GUI BoxPvP" maxlength="60">
+        <label id="lblPubTitle">Nazwa skryptu</label>
+        <input id="pubTitle" maxlength="60">
       </div>
       <div class="field">
-        <label>Twój nick (opcjonalnie, domyślnie Anonim)</label>
+        <label id="lblPubAuthor">Twój nick (opcjonalnie, domyślnie Anonim)</label>
         <input id="pubAuthor" placeholder="Anonim" maxlength="32">
       </div>
-      <button class="btn btn-green" style="justify-content:center;" onclick="publishAnonymous()">✨ Zapisz i wygeneruj link udostępniania</button>
+      <button class="btn btn-green" id="btnPublishDo" style="justify-content:center;" onclick="publishAnonymous()">✨ Zapisz i wygeneruj link udostępniania</button>
 
       <div id="shareResultBox" style="display:none; background:#f0fdf4; border:1px solid #86efac; padding:10px; border-radius:8px;">
-        <div style="font-size:12px; font-weight:700; color:#166534; margin-bottom:5px;">Gotowy link do wysłania na Discorda (działa bez bazy SQL!):</div>
+        <div id="lblShareReady" style="font-size:12px; font-weight:700; color:#166534; margin-bottom:5px;">Gotowy link do wysłania:</div>
         <div style="display:flex; gap:6px;">
           <input id="shareUrlInput" readonly style="flex:1; font-size:12px; padding:6px; border:1px solid #bbf7d0; border-radius:5px; user-select:text;">
-          <button class="btn btn-green" onclick="copyShareUrl()">Kopiuj link</button>
+          <button class="btn btn-green" id="btnCopyLink" onclick="copyShareUrl()">Kopiuj link</button>
         </div>
       </div>
 
-      <div style="font-size:12px; font-weight:800; color:var(--text-muted); margin-top:6px;">📁 Zapisane skrypty w Twojej przeglądarce:</div>
+      <div id="lblSavedList" style="font-size:12px; font-weight:800; color:var(--text-muted); margin-top:6px;">📁 Zapisane skrypty w Twojej przeglądarce:</div>
       <div id="savedScriptsList" style="display:flex; flex-direction:column; gap:7px;"></div>
     </div>
   </div>
@@ -398,26 +402,167 @@
 
 <script>
 // =========================================================================
+// SŁOWNIK TŁUMACZEŃ (PL / EN)
+// =========================================================================
+let currentLang = localStorage.getItem('skrach_lang') || 'pl';
+
+const I18N = {
+  pl: {
+    titlePlaceholder: 'Nazwa skryptu...',
+    btnTemplates: '📚 Szablony',
+    btnShare: '🚀 Opublikuj / Udostępnij',
+    btnDownload: '⬇ Pobierz .sk',
+    btnDownload2: '💾 Pobierz .sk',
+    btnCopyCode: '📋 Kopiuj kod .sk',
+    cat_events: 'Wydarzenia',
+    cat_player: 'Gracz',
+    cat_gui: 'GUI Skrzynia',
+    cat_world: 'Świat',
+    cat_ctrl: 'Kontrola',
+    cat_vars: 'Zmienne',
+    paletteTitle: 'Kliknij blok, aby dodać',
+    targetInside: 'Cel dodawania: <b>Wnętrze wybranego bloku C</b> (<a href="#" onclick="activeContainerRef=null;renderWorkspace();return false;">wróć na dół stosu</a>)',
+    targetStack: (n) => `Cel dodawania: <b>Stos #${n}</b>`,
+    btnNewStack: '+ Nowy stos',
+    btnClear: 'Wyczyść',
+    stackLabel: (n) => `Stos #${n}`,
+    btnDelStack: 'Usuń stos',
+    emptyStack: 'Pusty stos — wybierz blok z lewej palety',
+    insideHint: '+ kliknij tutaj, aby dodawać bloki do środka',
+    tabCode: '📄 Kod Skript (.sk)',
+    tabSim: '▶ Testuj na żywo + GUI',
+    varsEmpty: 'Zmienne: brak',
+    varsPrefix: 'Zmienne: ',
+    btnCloseChest: '✕ Zamknij',
+    simWelcome: '[SKrach] Kliknij przycisk akcji lub wpisz dowolną komendę z Twoich bloków (np. /sklep, /kit)!',
+    simCmdPlaceholder: 'Wpisz komendę np. /sklep lub /kit...',
+    btnSimSend: 'Wyślij',
+    modalTplTitle: '📚 Gotowe szablony skryptów Skript',
+    btnLoadTpl: 'Wczytaj',
+    modalShareTitle: '🚀 Opublikuj anonimowo i udostępnij linkiem (Bez SQL)',
+    lblPubTitle: 'Nazwa skryptu',
+    lblPubAuthor: 'Twój nick (opcjonalnie, domyślnie Anonim)',
+    anonDefault: 'Anonim',
+    btnPublishDo: '✨ Zapisz i wygeneruj link udostępniania',
+    lblShareReady: 'Gotowy link do wysłania na Discorda (działa bez bazy SQL!):',
+    btnCopyLink: 'Kopiuj link',
+    lblSavedList: '📁 Zapisane skrypty w Twojej przeglądarce:',
+    noSaved: 'Brak zapisanych skryptów. Kliknij przycisk wyżej, aby zapisać pierwszy!',
+    btnOpen: 'Otwórz',
+    authorLabel: 'Autor',
+    toastCleared: 'Wyczyszczono obszar roboczy',
+    toastCopiedCode: 'Skopiowano gotowy kod .sk do schowka!',
+    toastDownloaded: (f) => `Pobrano plik ${f}`,
+    toastTplLoaded: 'Wczytano szablon i odświeżono przyciski w symulatorze!',
+    toastPublished: 'Zapisano i wygenerowano link udostępniania!',
+    toastCopiedLink: 'Skopiowano link do schowka!',
+    toastLoaded: (t) => `Wczytano: ${t}`,
+    simJoinBtn: 'Wejdź (on join)',
+    simBreakBtn: (b) => `Wykop ${b}`,
+    simClickBtn: 'Kliknij PPM (right click)',
+    simJoinedLog: '&7--- Gracz dołączył do gry ---',
+    simBrokeLog: (b) => `&7--- Wykopano blok: ${b} ---`,
+    simClickLog: '&7--- Kliknięto PPM (right click) ---',
+    simUnknownCmd: (c) => `&cNieznana komenda /${c} (dodaj blok command /${c}:)`,
+    simGuiClick: (s) => `&7[GUI] Kliknięto slot #${s}`,
+    simGiven: (a, i) => `&7+ Otrzymano &f${a}x ${i}`,
+    simSound: (s) => `&b♪ Dźwięk: ${s}`,
+    simHealed: '&c❤️ Uleczono gracza do pełna!',
+    simLightning: '&e⚡ Uderzył piorun!',
+    simTime: (t) => `&6🕒 Ustawiono czas na: ${t}`,
+    simDrop: (a, i) => `&7+ Upuszczono &f${a}x ${i}`,
+    simWait: (s) => `&8⏳ Odczekano ${s} sek.`,
+    simCondFail: (k, c, r) => `&c✖ Warunek nie spełniony: {${k}} = ${c} (wymagane >= ${r})`
+  },
+  en: {
+    titlePlaceholder: 'Script name...',
+    btnTemplates: '📚 Templates',
+    btnShare: '🚀 Publish / Share',
+    btnDownload: '⬇ Download .sk',
+    btnDownload2: '💾 Download .sk',
+    btnCopyCode: '📋 Copy .sk code',
+    cat_events: 'Events',
+    cat_player: 'Player',
+    cat_gui: 'Chest GUI',
+    cat_world: 'World',
+    cat_ctrl: 'Control',
+    cat_vars: 'Variables',
+    paletteTitle: 'Click a block to add it',
+    targetInside: 'Target: <b>Inside selected C-block</b> (<a href="#" onclick="activeContainerRef=null;renderWorkspace();return false;">return to stack bottom</a>)',
+    targetStack: (n) => `Target: <b>Stack #${n}</b>`,
+    btnNewStack: '+ New stack',
+    btnClear: 'Clear',
+    stackLabel: (n) => `Stack #${n}`,
+    btnDelStack: 'Delete stack',
+    emptyStack: 'Empty stack — pick a block from the left palette',
+    insideHint: '+ click here to add blocks inside',
+    tabCode: '📄 Skript Code (.sk)',
+    tabSim: '▶ Live Simulator + GUI',
+    varsEmpty: 'Variables: none',
+    varsPrefix: 'Variables: ',
+    btnCloseChest: '✕ Close',
+    simWelcome: '[SKrach] Click an event button above or type any command from your blocks (e.g. /sklep, /kit)!',
+    simCmdPlaceholder: 'Type command e.g. /sklep or /kit...',
+    btnSimSend: 'Send',
+    modalTplTitle: '📚 Ready-to-use Skript Templates',
+    btnLoadTpl: 'Load',
+    modalShareTitle: '🚀 Publish Anonymously & Share via Link (No SQL)',
+    lblPubTitle: 'Script name',
+    lblPubAuthor: 'Your nickname (optional, defaults to Anonymous)',
+    anonDefault: 'Anonymous',
+    btnPublishDo: '✨ Save & Generate Share Link',
+    lblShareReady: 'Ready-to-share link for Discord (works without any SQL database!):',
+    btnCopyLink: 'Copy link',
+    lblSavedList: '📁 Saved scripts in your browser:',
+    noSaved: 'No saved scripts yet. Click the button above to save your first one!',
+    btnOpen: 'Open',
+    authorLabel: 'Author',
+    toastCleared: 'Workspace cleared',
+    toastCopiedCode: 'Copied .sk code to clipboard!',
+    toastDownloaded: (f) => `Downloaded ${f}`,
+    toastTplLoaded: 'Template loaded and simulator triggers updated!',
+    toastPublished: 'Saved and generated shareable link!',
+    toastCopiedLink: 'Share link copied to clipboard!',
+    toastLoaded: (t) => `Loaded: ${t}`,
+    simJoinBtn: 'Join Server (on join)',
+    simBreakBtn: (b) => `Break ${b}`,
+    simClickBtn: 'Right Click (on right click)',
+    simJoinedLog: '&7--- Player joined the game ---',
+    simBrokeLog: (b) => `&7--- Broke block: ${b} ---`,
+    simClickLog: '&7--- Right clicked ---',
+    simUnknownCmd: (c) => `&cUnknown command /${c} (add block command /${c}:)`,
+    simGuiClick: (s) => `&7[GUI] Clicked slot #${s}`,
+    simGiven: (a, i) => `&7+ Received &f${a}x ${i}`,
+    simSound: (s) => `&b♪ Sound: ${s}`,
+    simHealed: '&c❤️ Player healed to full health!',
+    simLightning: '&e⚡ Lightning struck!',
+    simTime: (t) => `&6🕒 Time set to: ${t}`,
+    simDrop: (a, i) => `&7+ Dropped &f${a}x ${i}`,
+    simWait: (s) => `&8⏳ Waited ${s} sec.`,
+    simCondFail: (k, c, r) => `&c✖ Condition failed: {${k}} is ${c} (requires >= ${r})`
+  }
+};
+
+function t(key, ...args) {
+  const val = I18N[currentLang][key] ?? I18N.pl[key];
+  return typeof val === 'function' ? val(...args) : val;
+}
+
+// =========================================================================
 // DEFINICJE KATEGORII I BLOKÓW SKRIPT (W TYM GUI SKRZYNI)
 // =========================================================================
 const BLOCK_DEFS = {
   events: [
     { type: 'cmd', cat: 'events', hat: true, cBlock: true, label: ['command /', {k:'name', v:'sklep'}, ':'],
-      toSk: (b, ind, body) => `${ind}command /${b.name}:
-${ind}	trigger:
-${body || ind+'		stop'}` },
+      toSk: (b, ind, body) => `${ind}command /${b.name}:\n${ind}\ttrigger:\n${body || ind+'\t\tstop'}` },
     { type: 'on_join', cat: 'events', hat: true, cBlock: true, label: ['on join:'],
-      toSk: (b, ind, body) => `${ind}on join:
-${body || ind+'	stop'}` },
+      toSk: (b, ind, body) => `${ind}on join:\n${body || ind+'\tstop'}` },
     { type: 'on_break', cat: 'events', hat: true, cBlock: true, label: ['on break of ', {k:'block', v:'stone'}, ':'],
-      toSk: (b, ind, body) => `${ind}on break of ${b.block}:
-${body || ind+'	stop'}` },
+      toSk: (b, ind, body) => `${ind}on break of ${b.block}:\n${body || ind+'\tstop'}` },
     { type: 'on_inv_click', cat: 'events', hat: true, cBlock: true, label: ['on inventory click:'],
-      toSk: (b, ind, body) => `${ind}on inventory click:
-${body || ind+'	stop'}` },
+      toSk: (b, ind, body) => `${ind}on inventory click:\n${body || ind+'\tstop'}` },
     { type: 'on_right_click', cat: 'events', hat: true, cBlock: true, label: ['on right click:'],
-      toSk: (b, ind, body) => `${ind}on right click:
-${body || ind+'	stop'}` }
+      toSk: (b, ind, body) => `${ind}on right click:\n${body || ind+'\tstop'}` }
   ],
   player: [
     { type: 'send', cat: 'player', label: ['send ', {k:'msg', v:'&aWitaj na serwerze!', wide:true}, ' to player'],
@@ -439,12 +584,10 @@ ${body || ind+'	stop'}` }
     { type: 'format_slot', cat: 'gui', label: ['format slot ', {k:'slot', v:'11', num:true}, ' of player with ', {k:'item', v:'diamond'}, ' named ', {k:'name', v:'&bDiament (100$)', wide:true}],
       toSk: (b, ind) => `${ind}set slot ${b.slot} of player's current inventory to ${b.item} named "${b.name}"` },
     { type: 'if_inv_name', cat: 'gui', cBlock: true, label: ['if name of event-inventory is ', {k:'title', v:'&8Sklep Serwerowy', wide:true}, ':'],
-      toSk: (b, ind, body) => `${ind}if name of event-inventory is "${b.title}":
-${body || ind+'	stop'}` },
+      toSk: (b, ind, body) => `${ind}if name of event-inventory is "${b.title}":\n${body || ind+'\tstop'}` },
     { type: 'if_slot', cat: 'gui', cBlock: true, label: ['if clicked slot is ', {k:'slot', v:'11', num:true}, ':'],
-      toSk: (b, ind, body) => `${ind}if index of event-slot is ${b.slot}:
-${body || ind+'	stop'}` },
-    { type: 'close_gui', cat: 'gui', label: ['close player's inventory'],
+      toSk: (b, ind, body) => `${ind}if index of event-slot is ${b.slot}:\n${body || ind+'\tstop'}` },
+    { type: 'close_gui', cat: 'gui', label: ['close player\'s inventory'],
       toSk: (b, ind) => `${ind}close player's inventory` }
   ],
   world: [
@@ -459,8 +602,7 @@ ${body || ind+'	stop'}` },
     { type: 'cancel', cat: 'ctrl', label: ['cancel event'],
       toSk: (b, ind) => `${ind}cancel event` },
     { type: 'chance', cat: 'ctrl', cBlock: true, label: ['chance of ', {k:'pct', v:'25', num:true}, '%:'],
-      toSk: (b, ind, body) => `${ind}chance of ${b.pct}%:
-${body || ind+'	stop'}` },
+      toSk: (b, ind, body) => `${ind}chance of ${b.pct}%:\n${body || ind+'\tstop'}` },
     { type: 'wait', cat: 'ctrl', label: ['wait ', {k:'sec', v:'3', num:true}, ' seconds'],
       toSk: (b, ind) => `${ind}wait ${b.sec} seconds` },
     { type: 'stop', cat: 'ctrl', label: ['stop'],
@@ -472,8 +614,7 @@ ${body || ind+'	stop'}` },
     { type: 'var_set', cat: 'vars', label: ['set {', {k:'vname', v:'kasa.%player%'}, '} to ', {k:'val', v:'100', num:true}],
       toSk: (b, ind) => `${ind}set {${b.vname}} to ${b.val}` },
     { type: 'if_var', cat: 'vars', cBlock: true, label: ['if {', {k:'vname', v:'kasa.%player%'}, '} >= ', {k:'val', v:'100', num:true}, ':'],
-      toSk: (b, ind, body) => `${ind}if {${b.vname}} >= ${b.val}:
-${body || ind+'	stop'}` },
+      toSk: (b, ind, body) => `${ind}if {${b.vname}} >= ${b.val}:\n${body || ind+'\tstop'}` },
     { type: 'var_remove', cat: 'vars', label: ['remove ', {k:'val', v:'100', num:true}, ' from {', {k:'vname', v:'kasa.%player%'}, '}'],
       toSk: (b, ind) => `${ind}remove ${b.val} from {${b.vname}}` }
   ]
@@ -482,12 +623,15 @@ ${body || ind+'	stop'}` },
 const ALL_DEFS = Object.values(BLOCK_DEFS).flat().reduce((acc, d) => (acc[d.type] = d, acc), {});
 
 // =========================================================================
-// GOTOWE SZABLONY SKRYPTÓW
+// GOTOWE SZABLONY SKRYPTÓW (PL / EN)
 // =========================================================================
 const TEMPLATES = [
   {
-    name: '🛒 Sklep GUI (/sklep) z kupowaniem za kasę',
-    desc: 'Otwiera skrzynię 3-rzędową z Diamentem i Mieczem, sprawdza zmienną {kasa.%player%} i pobiera opłatę po kliknięciu slotu.',
+    name: { pl: '🛒 Sklep GUI (/sklep) z kupowaniem za kasę', en: '🛒 Chest Shop GUI (/sklep) with Balance Check' },
+    desc: {
+      pl: 'Otwiera skrzynię 3-rzędową z Diamentem i Mieczem, sprawdza zmienną {kasa.%player%} i pobiera opłatę po kliknięciu slotu.',
+      en: 'Opens a 3-row chest GUI with Diamond and Sword, checks {kasa.%player%} balance, and charges on slot click.'
+    },
     stacks: [
       [
         { type: 'cmd', name: 'sklep', children: [
@@ -522,8 +666,11 @@ const TEMPLATES = [
     ]
   },
   {
-    name: '⛏️ Zarabianie za wykopanie Stone + Szansa na Drop',
-    desc: 'Dodaje +25$ do portfela przy każdym wykopanym stone oraz daje 30% szans na dodatkowy diament.',
+    name: { pl: '⛏️ Zarabianie za wykopanie Stone + Szansa na Drop', en: '⛏️ Stone Mining Money + Lucky Diamond Drop' },
+    desc: {
+      pl: 'Dodaje +25$ do portfela przy każdym wykopanym stone oraz daje 30% szans na dodatkowy diament.',
+      en: 'Adds +25$ to balance on breaking stone and gives a 30% chance to drop an extra diamond.'
+    },
     stacks: [
       [
         { type: 'on_break', block: 'stone', children: [
@@ -539,8 +686,11 @@ const TEMPLATES = [
     ]
   },
   {
-    name: '🎁 Komenda /kit + Powitanie nowego gracza',
-    desc: 'Wita gracza przy wejściu, daje mu 200$ na start oraz udostępnia komendę /kit z zestawem startowym.',
+    name: { pl: '🎁 Komenda /kit + Powitanie nowego gracza', en: '🎁 /kit Command + New Player Welcome' },
+    desc: {
+      pl: 'Wita gracza przy wejściu, daje mu 200$ na start oraz udostępnia komendę /kit z zestawem startowym.',
+      en: 'Welcomes players on join, grants 200$ starter money, and provides a /kit starter gear command.'
+    },
     stacks: [
       [
         { type: 'on_join', children: [
@@ -567,7 +717,48 @@ const TEMPLATES = [
 let currentCat = 'events';
 let stacks = JSON.parse(JSON.stringify(TEMPLATES[0].stacks));
 let selectedStackIdx = 0;
-let activeContainerRef = null; // referencja do tablicy children wybranego bloku C
+let activeContainerRef = null;
+
+function setLanguage(lang) {
+  currentLang = lang;
+  localStorage.setItem('skrach_lang', lang);
+  document.getElementById('langSwitcher').value = lang;
+  document.documentElement.lang = lang;
+
+  document.getElementById('projectTitle').placeholder = t('titlePlaceholder');
+  document.getElementById('btnTemplates').textContent = t('btnTemplates');
+  document.getElementById('btnShare').textContent = t('btnShare');
+  document.getElementById('btnDownload').textContent = t('btnDownload');
+  document.getElementById('btnDownload2').textContent = t('btnDownload2');
+  document.getElementById('btnCopyCode').textContent = t('btnCopyCode');
+
+  ['events','player','gui','world','ctrl','vars'].forEach(c => {
+    document.getElementById('cat_' + c).textContent = t('cat_' + c);
+  });
+
+  document.getElementById('btnNewStack').textContent = t('btnNewStack');
+  document.getElementById('btnClear').textContent = t('btnClear');
+  document.getElementById('tabCode').textContent = t('tabCode');
+  document.getElementById('tabSim').textContent = t('tabSim');
+  document.getElementById('btnCloseChest').textContent = t('btnCloseChest');
+  document.getElementById('simCmdInput').placeholder = t('simCmdPlaceholder');
+  document.getElementById('btnSimSend').textContent = t('btnSimSend');
+
+  document.getElementById('modalTplTitle').textContent = t('modalTplTitle');
+  document.getElementById('modalShareTitle').textContent = t('modalShareTitle');
+  document.getElementById('lblPubTitle').textContent = t('lblPubTitle');
+  document.getElementById('lblPubAuthor').textContent = t('lblPubAuthor');
+  document.getElementById('pubAuthor').placeholder = t('anonDefault');
+  document.getElementById('btnPublishDo').textContent = t('btnPublishDo');
+  document.getElementById('lblShareReady').textContent = t('lblShareReady');
+  document.getElementById('btnCopyLink').textContent = t('btnCopyLink');
+  document.getElementById('lblSavedList').textContent = t('lblSavedList');
+
+  renderPalette();
+  renderWorkspace();
+  refreshSimTriggers();
+  updateVarsHud();
+}
 
 function showToast(msg) {
   const el = document.getElementById('toast');
@@ -585,7 +776,7 @@ function selectCat(cat) {
 
 function renderPalette() {
   const pal = document.getElementById('palette');
-  pal.innerHTML = `<div class="palette-title">Kliknij blok, aby dodać</div>`;
+  pal.innerHTML = `<div class="palette-title">${t('paletteTitle')}</div>`;
   BLOCK_DEFS[currentCat].forEach(def => {
     const el = document.createElement('div');
     el.className = `block c-${def.cat} ${def.hat ? 'hat' : ''}`;
@@ -642,7 +833,7 @@ function clearWorkspace() {
   selectedStackIdx = 0;
   activeContainerRef = null;
   renderWorkspace();
-  showToast('Wyczyszczono obszar roboczy');
+  showToast(t('toastCleared'));
 }
 
 function renderBlockNode(block, parentArray, idx) {
@@ -668,6 +859,7 @@ function renderBlockNode(block, parentArray, idx) {
       inp.oninput = e => {
         block[part.k] = e.target.value;
         updateCodeOutput();
+        refreshSimTriggers();
       };
       row.appendChild(inp);
     }
@@ -696,7 +888,7 @@ function renderBlockNode(block, parentArray, idx) {
     if (!block.children || block.children.length === 0) {
       const hint = document.createElement('span');
       hint.style.cssText = 'font-size:11px;opacity:0.75;';
-      hint.textContent = '+ kliknij tutaj, aby dodawać bloki do środka';
+      hint.textContent = t('insideHint');
       inner.appendChild(hint);
     } else {
       block.children.forEach((child, cIdx) => {
@@ -716,8 +908,8 @@ function renderWorkspace() {
   const ws = document.getElementById('workspace');
   ws.innerHTML = '';
   document.getElementById('targetInfo').innerHTML = activeContainerRef
-    ? `Cel dodawania: <b>Wnętrze wybranego bloku C</b> (<a href="#" onclick="activeContainerRef=null;renderWorkspace();return false;">wróć na dół stosu</a>)`
-    : `Cel dodawania: <b>Stos #${selectedStackIdx + 1}</b>`;
+    ? t('targetInside')
+    : t('targetStack', selectedStackIdx + 1);
 
   stacks.forEach((stack, sIdx) => {
     const grp = document.createElement('div');
@@ -730,10 +922,10 @@ function renderWorkspace() {
 
     const head = document.createElement('div');
     head.className = 'stack-header';
-    head.innerHTML = `<span>Stos #${sIdx + 1}</span>`;
+    head.innerHTML = `<span>${t('stackLabel', sIdx + 1)}</span>`;
     const delStack = document.createElement('button');
     delStack.className = 'mini-btn del';
-    delStack.textContent = 'Usuń stos';
+    delStack.textContent = t('btnDelStack');
     delStack.onclick = e => {
       e.stopPropagation();
       stacks.splice(sIdx, 1);
@@ -748,7 +940,7 @@ function renderWorkspace() {
     if (!stack.length) {
       const empty = document.createElement('div');
       empty.style.cssText = 'font-size:12px;color:#64748b;padding:12px;';
-      empty.textContent = 'Pusty stos — wybierz blok z lewej palety';
+      empty.textContent = t('emptyStack');
       grp.appendChild(empty);
     } else {
       stack.forEach((blk, bIdx) => grp.appendChild(renderBlockNode(blk, stack, bIdx)));
@@ -757,13 +949,14 @@ function renderWorkspace() {
   });
 
   updateCodeOutput();
+  refreshSimTriggers();
 }
 
 // =========================================================================
 // GENERATOR KODU .SK
 // =========================================================================
 function compileBlocks(list, indentLevel) {
-  const ind = '	'.repeat(indentLevel);
+  const ind = '\t'.repeat(indentLevel);
   return list.map(b => {
     const def = ALL_DEFS[b.type];
     if (!def) return '';
@@ -773,22 +966,14 @@ function compileBlocks(list, indentLevel) {
       return def.toSk(b, ind, bodyCode);
     }
     return def.toSk(b, ind);
-  }).filter(Boolean).join('
-');
+  }).filter(Boolean).join('\n');
 }
 
 function generateFullSkript() {
-  const title = document.getElementById('projectTitle').value || 'Skrypt';
-  const header = `# ==========================================
-# Wygenerowano w SKrach (Scratch dla Skript)
-# Projekt: ${title}
-# ==========================================
-
-`;
-  const body = stacks.map(st => compileBlocks(st, 0)).filter(Boolean).join('
-
-');
-  return header + (body || '# Dodaj bloki po lewej stronie, aby wygenerować kod!');
+  const title = document.getElementById('projectTitle').value || 'Script';
+  const header = `# ==========================================\n# Generated with SKrach (Scratch for Skript)\n# Project: ${title}\n# ==========================================\n\n`;
+  const body = stacks.map(st => compileBlocks(st, 0)).filter(Boolean).join('\n\n');
+  return header + (body || '# Add blocks on the left to generate Skript code!');
 }
 
 function updateCodeOutput() {
@@ -797,21 +982,22 @@ function updateCodeOutput() {
 
 function copyCode() {
   navigator.clipboard.writeText(generateFullSkript());
-  showToast('Skopiowano gotowy kod .sk do schowka!');
+  showToast(t('toastCopiedCode'));
 }
 
 function downloadSk() {
-  const title = (document.getElementById('projectTitle').value || 'skrypt').toLowerCase().replace(/[^a-z0-9_-]/g, '_');
+  const title = (document.getElementById('projectTitle').value || 'script').toLowerCase().replace(/[^a-z0-9_-]/g, '_');
+  const filename = `${title || 'script'}.sk`;
   const blob = new Blob([generateFullSkript()], { type: 'text/plain;charset=utf-8' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `${title || 'skrypt'}.sk`;
+  a.download = filename;
   a.click();
-  showToast(`Pobrano plik ${title || 'skrypt'}.sk`);
+  showToast(t('toastDownloaded', filename));
 }
 
 // =========================================================================
-// INTERAKTYWNY SYMULATOR MINECRAFT + SKRZYNIA GUI NA ŻYWO
+// INTERAKTYWNY SYMULATOR MINECRAFT + SKRZYNIA GUI NA ŻYWO (PEŁNE WYKONANIE)
 // =========================================================================
 const simState = {
   vars: { 'kasa.Gracz': 150 },
@@ -863,11 +1049,49 @@ function logSim(msg) {
 
 function updateVarsHud() {
   const entries = Object.entries(simState.vars).map(([k, v]) => `{${k}}: ${v}`);
-  document.getElementById('simVarsHud').textContent = entries.length ? entries.join(' | ') : 'Zmienne: brak';
+  document.getElementById('simVarsHud').textContent = entries.length ? t('varsPrefix') + entries.join(' | ') : t('varsEmpty');
 }
 
 function resolveVarName(raw) {
   return String(raw || '').replace(/%player%/g, 'Gracz');
+}
+
+// Dynamicznie buduje przyciski wyzwalaczy na podstawie aktywnych bloków użytkownika!
+function refreshSimTriggers() {
+  const box = document.getElementById('simTriggersBox');
+  if (!box) return;
+  box.innerHTML = '';
+
+  const addedKeys = new Set();
+  const addTriggerBtn = (key, label, cls, fn) => {
+    if (addedKeys.has(key)) return;
+    addedKeys.add(key);
+    const btn = document.createElement('button');
+    btn.className = `btn ${cls}`;
+    btn.textContent = label;
+    btn.onclick = fn;
+    box.appendChild(btn);
+  };
+
+  stacks.forEach(st => {
+    const hat = st[0];
+    if (!hat) return;
+    if (hat.type === 'on_join') {
+      addTriggerBtn('join', t('simJoinBtn'), 'btn-orange', () => runSimEvent('join'));
+    } else if (hat.type === 'on_break') {
+      const blk = (hat.block || 'stone').trim();
+      addTriggerBtn('break_' + blk, t('simBreakBtn', blk), 'btn-green', () => runSimEvent('break', blk));
+    } else if (hat.type === 'on_right_click') {
+      addTriggerBtn('rclick', t('simClickBtn'), 'btn-white', () => runSimEvent('right_click'));
+    } else if (hat.type === 'cmd') {
+      const cmd = (hat.name || 'sklep').trim();
+      addTriggerBtn('cmd_' + cmd, `/${cmd}`, 'btn-purple', () => runSimCommand('/' + cmd));
+    }
+  });
+
+  if (addedKeys.size === 0) {
+    addTriggerBtn('join', t('simJoinBtn'), 'btn-orange', () => runSimEvent('join'));
+  }
 }
 
 function renderSimChest() {
@@ -891,7 +1115,7 @@ function renderSimChest() {
     }
     slotEl.onclick = () => {
       simState.lastClickedSlot = s;
-      logSim(`&7[GUI] Kliknięto slot #${s}`);
+      logSim(t('simGuiClick', s));
       executeEventType('on_inv_click');
     };
     grid.appendChild(slotEl);
@@ -903,20 +1127,30 @@ function closeSimChest() {
   renderSimChest();
 }
 
-function executeList(list) {
+// Asynchroniczne wykonanie listy bloków (wspiera wait X seconds i stop!)
+async function executeList(list) {
   for (const b of list) {
-    if (b.type === 'send') logSim(b.msg);
+    if (b.type === 'stop') return 'STOP';
+    if (b.type === 'cancel') continue;
+
+    if (b.type === 'wait') {
+      const sec = Math.min(10, Math.max(0.1, parseFloat(b.sec) || 1));
+      logSim(t('simWait', sec));
+      await new Promise(r => setTimeout(r, sec * 1000));
+    }
+    else if (b.type === 'send') logSim(b.msg);
     else if (b.type === 'broadcast') logSim(`&e[BC] ${b.msg}`);
     else if (b.type === 'actionbar') logSim(`&d[ActionBar] ${b.msg}`);
-    else if (b.type === 'give') logSim(`&7+ Otrzymano &f${b.amount}x ${b.item}`);
-    else if (b.type === 'sound') logSim(`&b♪ Dźwięk: ${b.snd}`);
-    else if (b.type === 'heal') logSim(`&c❤️ Uleczono gracza do pełna!`);
-    else if (b.type === 'strike_lightning') logSim(`&e⚡ Uderzył piorun!`);
-    else if (b.type === 'set_time') logSim(`&6🕒 Ustawiono czas na: ${b.time}`);
+    else if (b.type === 'give') logSim(t('simGiven', b.amount, b.item));
+    else if (b.type === 'drop_item') logSim(t('simDrop', b.amount, b.item));
+    else if (b.type === 'sound') logSim(t('simSound', b.snd));
+    else if (b.type === 'heal') logSim(t('simHealed'));
+    else if (b.type === 'strike_lightning') logSim(t('simLightning'));
+    else if (b.type === 'set_time') logSim(t('simTime', b.time));
     else if (b.type === 'open_gui') {
       simState.chestOpen = true;
       simState.chestRows = parseInt(b.rows, 10) || 3;
-      simState.chestTitle = b.title || 'Skrzynia';
+      simState.chestTitle = b.title || 'Chest';
       simState.chestItems = {};
       renderSimChest();
     }
@@ -926,14 +1160,23 @@ function executeList(list) {
     }
     else if (b.type === 'close_gui') closeSimChest();
     else if (b.type === 'if_inv_name') {
-      if (simState.chestTitle === b.title) executeList(b.children || []);
+      if (simState.chestTitle === b.title) {
+        const res = await executeList(b.children || []);
+        if (res === 'STOP') return 'STOP';
+      }
     }
     else if (b.type === 'if_slot') {
-      if (simState.lastClickedSlot === (parseInt(b.slot, 10) || 0)) executeList(b.children || []);
+      if (simState.lastClickedSlot === (parseInt(b.slot, 10) || 0)) {
+        const res = await executeList(b.children || []);
+        if (res === 'STOP') return 'STOP';
+      }
     }
     else if (b.type === 'chance') {
       const pct = parseFloat(b.pct) || 0;
-      if (Math.random() * 100 <= pct) executeList(b.children || []);
+      if (Math.random() * 100 <= pct) {
+        const res = await executeList(b.children || []);
+        if (res === 'STOP') return 'STOP';
+      }
     }
     else if (b.type === 'var_set') {
       simState.vars[resolveVarName(b.vname)] = Number(b.val) || 0;
@@ -953,8 +1196,12 @@ function executeList(list) {
       const k = resolveVarName(b.vname);
       const cur = Number(simState.vars[k]) || 0;
       const req = Number(b.val) || 0;
-      if (cur >= req) executeList(b.children || []);
-      else logSim(`&c✖ Warunek nie spełniony: {${k}} wynosi ${cur} (wymagane >= ${req})`);
+      if (cur >= req) {
+        const res = await executeList(b.children || []);
+        if (res === 'STOP') return 'STOP';
+      } else {
+        logSim(t('simCondFail', k, cur, req));
+      }
     }
   }
 }
@@ -964,17 +1211,22 @@ function executeEventType(type, extraMatch) {
     const hat = st[0];
     if (!hat || hat.type !== type) return;
     if (extraMatch && !extraMatch(hat)) return;
-    executeList(hat.children || []);
+    const sequence = [...(hat.children || []), ...st.slice(1)];
+    executeList(sequence);
   });
 }
 
-function runSimEvent(ev) {
+function runSimEvent(ev, param) {
   if (ev === 'join') {
-    logSim('&7--- Gracz dołączył do gry ---');
+    logSim(t('simJoinedLog'));
     executeEventType('on_join');
-  } else if (ev === 'break_stone') {
-    logSim('&7--- Wykopano blok: stone ---');
-    executeEventType('on_break', h => (h.block || '').toLowerCase() === 'stone');
+  } else if (ev === 'break') {
+    const targetBlk = (param || 'stone').toLowerCase();
+    logSim(t('simBrokeLog', targetBlk));
+    executeEventType('on_break', h => (h.block || '').toLowerCase() === targetBlk);
+  } else if (ev === 'right_click') {
+    logSim(t('simClickLog'));
+    executeEventType('on_right_click');
   }
 }
 
@@ -990,10 +1242,11 @@ function runSimCommand(overrideCmd) {
     const hat = st[0];
     if (hat && hat.type === 'cmd' && (hat.name || '').toLowerCase() === cmdName) {
       found = true;
-      executeList(hat.children || []);
+      const sequence = [...(hat.children || []), ...st.slice(1)];
+      executeList(sequence);
     }
   });
-  if (!found) logSim(`&cNieznana komenda /${cmdName} (dodaj blok command /${cmdName}:)`);
+  if (!found) logSim(t('simUnknownCmd', cmdName));
 }
 
 function switchRightTab(tab) {
@@ -1001,6 +1254,7 @@ function switchRightTab(tab) {
   document.getElementById('tabSim').classList.toggle('active', tab === 'sim');
   document.getElementById('codeView').style.display = tab === 'code' ? 'flex' : 'none';
   document.getElementById('simView').style.display = tab === 'sim' ? 'flex' : 'none';
+  refreshSimTriggers();
   updateVarsHud();
 }
 
@@ -1011,20 +1265,22 @@ function openTemplatesModal() {
   const box = document.getElementById('templatesList');
   box.innerHTML = '';
   TEMPLATES.forEach(tpl => {
+    const titleStr = tpl.name[currentLang] || tpl.name.pl;
+    const descStr = tpl.desc[currentLang] || tpl.desc.pl;
     const card = document.createElement('div');
     card.className = 'card-item';
-    card.innerHTML = `<div><div style="font-weight:800;font-size:13.5px;">${tpl.name}</div><div style="font-size:12px;color:#627d98;margin-top:2px;">${tpl.desc}</div></div>`;
+    card.innerHTML = `<div><div style="font-weight:800;font-size:13.5px;">${titleStr}</div><div style="font-size:12px;color:#627d98;margin-top:2px;">${descStr}</div></div>`;
     const btn = document.createElement('button');
     btn.className = 'btn btn-purple';
-    btn.textContent = 'Wczytaj';
+    btn.textContent = t('btnLoadTpl');
     btn.onclick = () => {
       stacks = JSON.parse(JSON.stringify(tpl.stacks));
       selectedStackIdx = 0;
       activeContainerRef = null;
-      document.getElementById('projectTitle').value = tpl.name.replace(/^[^\wąćęłńóśźżĄĆĘŁŃÓŚŹŻ]+\s*/, '');
+      document.getElementById('projectTitle').value = titleStr.replace(/^[^\wąćęłńóśźżĄĆĘŁŃÓŚŹŻ]+\s*/, '');
       renderWorkspace();
       closeModals();
-      showToast('Wczytano szablon!');
+      showToast(t('toastTplLoaded'));
     };
     card.appendChild(btn);
     box.appendChild(card);
@@ -1044,18 +1300,18 @@ function decodeProjectFromHash(hashStr) {
 }
 
 function openShareModal() {
-  document.getElementById('pubTitle').value = document.getElementById('projectTitle').value || 'Mój Skrypt';
+  document.getElementById('pubTitle').value = document.getElementById('projectTitle').value || 'Script';
   document.getElementById('shareResultBox').style.display = 'none';
   renderSavedScriptsList();
   document.getElementById('shareModal').style.display = 'flex';
 }
 
 function publishAnonymous() {
-  const title = (document.getElementById('pubTitle').value || '').trim() || 'Bez nazwy';
-  const author = (document.getElementById('pubAuthor').value || '').trim() || 'Anonim';
+  const title = (document.getElementById('pubTitle').value || '').trim() || 'Untitled';
+  const author = (document.getElementById('pubAuthor').value || '').trim() || t('anonDefault');
   document.getElementById('projectTitle').value = title;
 
-  const payload = { t: title, a: author, s: stacks, d: new Date().toLocaleDateString('pl-PL') };
+  const payload = { t: title, a: author, s: stacks, d: new Date().toLocaleDateString(currentLang === 'pl' ? 'pl-PL' : 'en-US') };
   const encoded = encodeProjectToHash(payload);
   const url = `${location.origin}${location.pathname}#s=${encoded}`;
   history.replaceState(null, '', `#s=${encoded}`);
@@ -1067,24 +1323,24 @@ function publishAnonymous() {
   document.getElementById('shareUrlInput').value = url;
   document.getElementById('shareResultBox').style.display = 'block';
   renderSavedScriptsList();
-  showToast('Zapisano i wygenerowano link udostępniania!');
+  showToast(t('toastPublished'));
 }
 
 function copyShareUrl() {
   const inp = document.getElementById('shareUrlInput');
   inp.select();
   navigator.clipboard.writeText(inp.value);
-  showToast('Skopiowano link do schowka!');
+  showToast(t('toastCopiedLink'));
 }
 
 function renderSavedScriptsList() {
   const box = document.getElementById('savedScriptsList');
   const list = JSON.parse(localStorage.getItem('skrach_scripts_v1') || '[]');
-  box.innerHTML = list.length ? '' : '<div style="font-size:12px;color:#94a3b8;">Brak zapisanych skryptów. Kliknij przycisk wyżej, aby zapisać pierwszy!</div>';
+  box.innerHTML = list.length ? '' : `<div style="font-size:12px;color:#94a3b8;">${t('noSaved')}</div>`;
   list.forEach((item, idx) => {
     const row = document.createElement('div');
     row.className = 'card-item';
-    row.innerHTML = `<div><div style="font-weight:700;font-size:13px;">${item.title}</div><div style="font-size:11px;color:#627d98;">Autor: <b>${item.author}</b> • ${item.date}</div></div>`;
+    row.innerHTML = `<div><div style="font-weight:700;font-size:13px;">${item.title}</div><div style="font-size:11px;color:#627d98;">${t('authorLabel')}: <b>${item.author}</b> • ${item.date}</div></div>`;
     const actions = document.createElement('div');
     actions.style.display = 'flex';
     actions.style.gap = '5px';
@@ -1092,7 +1348,7 @@ function renderSavedScriptsList() {
     const openBtn = document.createElement('button');
     openBtn.className = 'btn btn-white';
     openBtn.style.border = '1px solid #cbd5e1';
-    openBtn.textContent = 'Otwórz';
+    openBtn.textContent = t('btnOpen');
     openBtn.onclick = () => {
       const data = decodeProjectFromHash(item.hash);
       if (data && data.s) {
@@ -1102,7 +1358,7 @@ function renderSavedScriptsList() {
         activeContainerRef = null;
         renderWorkspace();
         closeModals();
-        showToast(`Wczytano: ${item.title}`);
+        showToast(t('toastLoaded', item.title));
       }
     };
 
@@ -1133,12 +1389,12 @@ window.addEventListener('DOMContentLoaded', () => {
     const shared = decodeProjectFromHash(location.hash.slice(3));
     if (shared && Array.isArray(shared.s)) {
       stacks = shared.s;
-      document.getElementById('projectTitle').value = shared.t || 'Udostępniony skrypt';
-      showToast(`Wczytano skrypt "${shared.t}" (Autor: ${shared.a || 'Anonim'})`);
+      document.getElementById('projectTitle').value = shared.t || 'Shared script';
+      showToast(`${shared.t} (${shared.a || t('anonDefault')})`);
     }
   }
-  renderPalette();
-  renderWorkspace();
+  setLanguage(currentLang);
+  document.getElementById('simChat').innerHTML = `<div style="color:#94a3b8;">${t('simWelcome')}</div>`;
 });
 </script>
 </body>
